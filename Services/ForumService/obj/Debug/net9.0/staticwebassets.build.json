@@ -1,0 +1,12 @@
+{
+  "Version": 1,
+  "Hash": "JBy9imgW9OfWAIMhATsYnuZN88JlIGvX/bYCXyBIgSk=",
+  "Source": "ForumService",
+  "BasePath": "_content/ForumService",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": [],
+  "Endpoints": []
+}

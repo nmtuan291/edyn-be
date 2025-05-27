@@ -42,3 +42,4 @@ C:\Users\Admin\source\repos\edyn-be\Services\UserService\bin\Debug\net9.0\Micros
 C:\Users\Admin\source\repos\edyn-be\Services\UserService\bin\Debug\net9.0\Microsoft.Extensions.Logging.Abstractions.dll
 C:\Users\Admin\source\repos\edyn-be\Services\UserService\bin\Debug\net9.0\Microsoft.Extensions.Options.dll
 C:\Users\Admin\source\repos\edyn-be\Services\UserService\bin\Debug\net9.0\Microsoft.Extensions.Primitives.dll
+C:\Users\Admin\source\repos\edyn-be\Services\UserService\obj\Debug\net9.0\UserService.sourcelink.json
