@@ -22,16 +22,16 @@ namespace ForumService.ForumService.Domain.Entities
         public string Content { get; set; }
 
         [Required]
-        public int Upvate {  get; set; }
+        public int Upvote {  get; set; }
 
-        public Guid ParentId { get; set; }
+        public Guid? ParentId { get; set; }
 
         [ForeignKey("ParentId")]
         public Comment ParmentComment { get; set; }
 
         public ICollection<Comment> ChildrenComments { get; set; }
 
-        public DateTime UpdatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
 
         [Required]
         public DateTime CreatedAt { get; set; }

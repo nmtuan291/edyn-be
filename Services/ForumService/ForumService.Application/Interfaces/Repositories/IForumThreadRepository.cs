@@ -1,4 +1,5 @@
-﻿using ForumService.ForumService.Domain.Entities;
+﻿using ForumService.ForumService.Application.DTOs;
+using ForumService.ForumService.Domain.Entities;
 
 namespace ForumService.ForumService.Application.Interfaces.Repositories
 {
@@ -6,6 +7,6 @@ namespace ForumService.ForumService.Application.Interfaces.Repositories
     {
         public Task<IEnumerable<ForumThread>> GetThreadsByForumIdAsync(Guid forumId);
         public Task<IEnumerable<Comment>> GetCommentByThreadIdAsync(Guid threadId);
-        public Task AddCommentAsync();
+        public Task InsertCommentAsync(Comment comment);
     }
 }

@@ -21,7 +21,7 @@ namespace ForumService.ForumService.Domain.Entities
         public string Title { get; set; }
 
         [Required]
-        public bool isPinned { get; set; }
+        public bool IsPinned { get; set; }
 
         [Required]
         public ICollection<Tag> Tags { get; set; }

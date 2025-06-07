@@ -2,6 +2,7 @@
 using ForumService.ForumService.Infrastructure.Data;
 using ForumService.ForumService.Application.Interfaces.Repositories;
 using Microsoft.EntityFrameworkCore;
+using ForumService.ForumService.Application.DTOs;
 
 namespace ForumService.ForumService.Infrastructure.Repositories
 {
@@ -32,9 +33,32 @@ namespace ForumService.ForumService.Infrastructure.Repositories
             return comments;
         }
 
-        public async Task AddCommentAsync()
+        public async Task InsertCommentAsync(Comment comment)
         {
+            await _context.Comments.AddAsync(comment);
+        }
 
+        public async Task InsertThreadAsync(ForumThread thread)
+        {
+            await _context.Threads.AddAsync(thread);
+        }
+
+        public async Task DeleteThreadByIdAsync(Guid threadId)
+        {
+            var thread = await _context.Threads.FindAsync(threadId);
+            if (thread != null)
+            {
+                _context.Threads.Remove(thread);
+            }
+        }
+
+        public async Task DeleteCommentById(Guid commentId)
+        {
+            var comment = await _context.Comments.FindAsync(commentId);
+            if (comment != null)
+            {
+                _context.Comments.Remove(comment);
+            }
         }
     }
 }

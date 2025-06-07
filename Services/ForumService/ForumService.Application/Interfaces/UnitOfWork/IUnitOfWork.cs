@@ -4,8 +4,8 @@ namespace ForumService.ForumService.Application.Interfaces.UnitOfWork
 {
     public interface IUnitOfWork: IDisposable
     {
-        public IForumRepository Forums { get; }
-        public IForumThreadRepository ForumThreads { get; }
-        public Task<int> CommitAsync();
+        IForumRepository Forums { get; }
+        IForumThreadRepository ForumThreads { get; }
+        Task<int> CommitAsync();
     }
 }
