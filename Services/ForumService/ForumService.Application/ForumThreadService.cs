@@ -3,6 +3,7 @@ using ForumService.ForumService.Application.Interfaces.UnitOfWork;
 using ForumService.ForumService.Domain.Entities;
 using ForumService.ForumService.Infrastructure.Repositories;
 using ForumService.ForumService.Application.Interfaces.Services;
+using Microsoft.AspNetCore.Mvc;
 
 namespace ForumService.ForumService.Application
 {
@@ -21,22 +22,22 @@ namespace ForumService.ForumService.Application
       var threads = await _unitOfWork.ForumThreads.GetThreadsByForumIdAsync(forumId);
 
       var forumThreads = threads
-              .Select(t => new ForumThreadDto
-              {
-                Id = t.ForumId,
-                ForumId = t.ForumId,
-                CreatorId = t.CreatorId,
-                Title = t.Title,
-                IsPinned = t.IsPinned,
-                Tags = t.Tags,
-                Images = t.Images,
-                Content = t.Content,
-                Slug = t.Slug,
-                Upvote = t.Upvote,
-                CreatedAt = t.CreatedAt,
-                LastUpdatedAt = t.LastUpdatedAt
-              })
-              .ToList();
+        .Select(t => new ForumThreadDto
+        {
+          Id = t.ForumId,
+          ForumId = t.ForumId,
+          CreatorId = t.CreatorId,
+          Title = t.Title,
+          IsPinned = t.IsPinned,
+          Tags = t.Tags,
+          Images = t.Images,
+          Content = t.Content,
+          Slug = t.Slug,
+          Upvote = t.Upvote,
+          CreatedAt = t.CreatedAt,
+          LastUpdatedAt = t.LastUpdatedAt
+        })
+        .ToList();
 
       return forumThreads;
     }
@@ -51,19 +52,19 @@ namespace ForumService.ForumService.Application
       var comments = await _unitOfWork.ForumThreads.GetCommentByThreadIdAsync(threadId);
 
       return comments.Select(c => new CommentDto
-      {
-        Id = c.Id,
-        ThreadId = c.ThreadId,
-        OwnerId = c.OwnerId,
-        Content = c.Content,
-        Upvote = c.Upvote,
-        CreatedAt = c.CreatedAt,
-        ParentId = c.ParentId,
-        ChildrenComments = c.ChildrenComments,
-        UpdatedAt = c.UpdatedAt,
-        Deleted = c.Deleted
-      })
-      .ToList();
+        {
+          Id = c.Id,
+          ThreadId = c.ThreadId,
+          OwnerId = c.OwnerId,
+          Content = c.Content,
+          Upvote = c.Upvote,
+          CreatedAt = c.CreatedAt,
+          ParentId = c.ParentId,
+          ChildrenComments = c.ChildrenComments,
+          UpdatedAt = c.UpdatedAt,
+          Deleted = c.Deleted
+        })
+        .ToList();
     }
 
     public async Task InsertComment(CommentDto comment)
@@ -95,5 +96,17 @@ namespace ForumService.ForumService.Application
       await _unitOfWork.ForumThreads.InsertCommentAsync(cmt);
       await _unitOfWork.CommitAsync();
     }
-  }
+
+    public async Task DeleteComment(Guid commentId)
+    {
+      await _unitOfWork.ForumThreads.DeleteCommentById(commentId);
+      await _unitOfWork.CommitAsync();
+    }
+
+    public async Task DeleteThread(Guid threadId)
+    {
+      await _unitOfWork.ForumThreads.DeleteThreadByIdAsync(threadId);
+      await _unitOfWork.CommitAsync();
+    }
+}
 }
