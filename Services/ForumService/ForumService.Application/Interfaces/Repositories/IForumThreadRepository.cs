@@ -5,8 +5,10 @@ namespace ForumService.ForumService.Application.Interfaces.Repositories
 {
     public interface IForumThreadRepository
     {
-        public Task<IEnumerable<ForumThread>> GetThreadsByForumIdAsync(Guid forumId);
-        public Task<IEnumerable<Comment>> GetCommentByThreadIdAsync(Guid threadId);
-        public Task InsertCommentAsync(Comment comment);
+        Task<IEnumerable<ForumThread>> GetThreadsByForumIdAsync(Guid forumId);
+        Task<IEnumerable<Comment>> GetCommentByThreadIdAsync(Guid threadId);
+        Task InsertCommentAsync(Comment comment);
+        Task DeleteCommentById(Guid commentId);
+        Task DeleteThreadByIdAsync(Guid threadId);
     }
 }
