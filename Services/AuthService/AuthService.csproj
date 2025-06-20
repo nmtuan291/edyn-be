@@ -8,6 +8,12 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="Google.Protobuf" Version="3.31.1" />
+        <PackageReference Include="Grpc.AspNetCore" Version="2.71.0" />
+        <PackageReference Include="Grpc.Tools" Version="2.72.0">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.5" />
         <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.5" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.5"/>
@@ -20,6 +26,7 @@
         <PackageReference Include="Microsoft.TestPlatform" Version="17.14.1" />
         <PackageReference Include="Moq" Version="4.20.72" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
         <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.12.0" />
         <PackageReference Include="xunit" Version="2.9.3" />
     </ItemGroup>
@@ -29,5 +36,16 @@
         <Link>.dockerignore</Link>
       </Content>
     </ItemGroup>
-
+    <ItemGroup>
+	<Protobuf Include="Protos/account.proto" GrpcServices="Server" />
+	<Protobuf Include="Protos\profile.proto">
+	  <GrpcServices>Server</GrpcServices>
+	  <Access>Public</Access>
+	  <ProtoCompile>True</ProtoCompile>
+	  <CompileOutputs>True</CompileOutputs>
+	  <OutputDir>obj\Debug/net9.0/</OutputDir>
+	  <Generator>MSBuild:Compile</Generator>
+	</Protobuf>
+        <Protobuf Include="Protos/profile.proto" GrpcServices="Client" />
+    </ItemGroup> 
 </Project>

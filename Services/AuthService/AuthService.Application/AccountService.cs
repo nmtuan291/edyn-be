@@ -1,31 +1,20 @@
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 using AuthService.AuthService.Application.Dtos;
-using AuthService.AuthService.Application.Interfaces.Repositories;
 using AuthService.AuthService.Application.Interfaces.Services;
-using AuthService.AuthService.Infrastructure.Data;
+using AuthService.AuthService.Domain.Entities;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Http.Logging;
-using Microsoft.IdentityModel.Tokens;
-using Xunit;
-using JwtRegisteredClaimNames = Microsoft.IdentityModel.JsonWebTokens.JwtRegisteredClaimNames;
 
 namespace AuthService.AuthService.Application;
 
 public class AccountService : IAccountService
 {
-    private readonly IConfiguration _config;
     private readonly UserManager<IdentityUser> _userManager;
     private readonly ITokenService _tokenService;
     
-    public AccountService(IConfiguration config, UserManager<IdentityUser> userManager, ITokenService tokenService)
+    public AccountService(UserManager<IdentityUser> userManager, ITokenService tokenService)
     {
-        _config = config;      
         _userManager = userManager;
         _tokenService = tokenService;
     }
-
     
     public async Task<LoginResponseDto?> Login(LoginAccountDto account)
     {
@@ -48,5 +37,34 @@ public class AccountService : IAccountService
         };
     }
 
+    public async Task<AccountDto?> GetAccount(string accountId)
+    {
+        var account = await _userManager.FindByIdAsync(accountId);
 
+        if (account == null)
+        {
+            return null;
+        }
+
+        return new AccountDto
+        {
+            Id = account.Id,
+            Email = account.Email,
+            UserName = account.UserName,
+            IsActive = true
+        };
+    }
+
+    public async Task<IdentityResult> Register(RegisterAccountDto account)
+    {
+        var user = new Account
+        {
+            Email = account.Email,
+            UserName = account.UserName,
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow,
+        };
+        
+        return await _userManager.CreateAsync(user, account.Password);
+    } 
 };

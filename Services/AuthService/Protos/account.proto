@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+option csharp_namespace = "AuthService.Grpc";
+
+service AccountService {
+  rpc GetAccountById (AccountRequest) returns (AccountResponse);
+}
+
+message AccountRequest {
+  string id = 1;
+}
+
+message AccountResponse {
+  string id = 1;
+  string username = 2;
+  string email = 3;
+  string isActive = 4;
+}
