@@ -10,6 +10,7 @@ message CreateProfileRequest {
   string id = 1;
   string username = 2;
   string email = 3;
+  int32 gender = 4;
 }
 
 message CreateProfileResponse {

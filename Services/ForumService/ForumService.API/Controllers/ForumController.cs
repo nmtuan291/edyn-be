@@ -1,9 +1,12 @@
-﻿using ForumService.ForumService.Application;
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using ForumService.ForumService.Application;
 using ForumService.ForumService.Application.DTOs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using ForumService.ForumService.Application.Interfaces.Services;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ForumService.ForumService.API.Controllers
 {
@@ -35,14 +38,28 @@ namespace ForumService.ForumService.API.Controllers
             return Ok(forum);
         }
         
+        [Authorize]
         [HttpPost]
         public async Task<ActionResult> CreateForum([FromBody] ForumDto forumDto)
         {
-            if (forumDto == null)
-                return BadRequest("Forum data is required");
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             
-            var createdForum = await _forumService.AddForum(forumDto);
+            var createdForum = await _forumService.AddForum(forumDto, userId);
+            
+            if (createdForum == null)
+                return StatusCode(StatusCodes.Status500InternalServerError, "Failed to create forum");
+            
             return CreatedAtAction(nameof(GetForum), new { forumId = createdForum.Id }, createdForum);
+        }
+
+        [Authorize]
+        [HttpPost("join/{forumId}")]
+        public async Task<ActionResult> JoinForum(string forumId)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            await _forumService.AddUserToForum(Guid.Parse(forumId), Guid.Parse(userId));
+            
+            return Ok();
         }
     }
 }

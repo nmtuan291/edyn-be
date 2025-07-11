@@ -31,6 +31,8 @@ public class UserProfileService : IUserProfileService
         {
              AccountId = request.Id,
              Avatar = "",
+             Username = request.Username,
+             Gender = request.Gender
         };
 
         await _userProfileRepository.CreateUserAsync(user);

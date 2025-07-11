@@ -53,21 +53,27 @@ namespace ForumService.ForumService.Application
             });
         }
 
-        public async Task<ForumDto> AddForum(ForumDto forum)
+        public async Task<ForumDto?> AddForum(ForumDto forum, string userId)
         {
+            Guid parsedId = Guid.Parse(userId);
             Forum newForum = new Forum
             {
                 Id = Guid.NewGuid(),
                 Name = forum.Name,
                 ShortName = forum.ShortName,
-                CreatedAt = forum.CreatedAt,
+                CreatedAt = DateTime.UtcNow,
                 Description = forum.Description,
                 ForumBanner = forum.ForumBanner,
                 ForumImage = forum.ForumImage,
-                CreatorId = forum.CreatorId,
+                CreatorId = parsedId
             };
             
             var insertedForum = await _unitOfWork.Forums.InsertForumAsync(newForum);
+            if (insertedForum == null)
+                return null;
+            
+            await _unitOfWork.Forums.InsertUserToForumAsync(newForum.Id, parsedId, "--------");
+            
             await _unitOfWork.CommitAsync();
 
             return new ForumDto 
@@ -82,5 +88,10 @@ namespace ForumService.ForumService.Application
                 CreatorId = insertedForum.CreatorId
             };
         }
+
+        public async Task AddUserToForum(Guid forumId, Guid userId)
+        {
+            await _unitOfWork.Forums.InsertUserToForumAsync(forumId, userId, "--------");
+        }  
     }
 }

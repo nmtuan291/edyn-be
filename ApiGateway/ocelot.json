@@ -4,7 +4,7 @@
       "DownstreamPathTemplate": "/api/user/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "localhost", "Port": 5001 }
+        { "Host": "localhost", "Port": 5161 }
       ],
       "UpstreamPathTemplate": "/users/{everything}",
       "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
@@ -13,22 +13,35 @@
       "DownstreamPathTemplate": "/api/forum/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "localhost", "Port": 5002 }
-      ],
+        { "Host": "localhost", "Port": 5220 }
+      ],  
       "UpstreamPathTemplate": "/forum/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
+      "UpstreamHttpMethod": [ "POST", "PUT", "DELETE" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      }
     },
     {
-      "DownstreamPathTemplate": "/api/auth/{everything}",
+      "DownstreamPathTemplate": "/api/forum/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "localhost", "Port": 5003 }
+        { "Host": "localhost", "Port": 5220 }
+      ],
+      "UpstreamPathTemplate": "/forum/{everything}",
+      "UpstreamHttpMethod": [ "GET" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/account/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "localhost", "Port": 5299 }
       ],
       "UpstreamPathTemplate": "/auth/{everything}",
       "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
     }
   ],
   "GlobalConfiguration": {
-    "BaseUrl": "http://localhost:5000"
+    "BaseUrl": "http://localhost:5057"
   }
 }

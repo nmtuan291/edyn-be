@@ -1,9 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using UserService.UserService.API.Grpc;
 using UserService.UserService.Application;
+using UserService.UserService.Application.Interfaces.Repositories;
 using UserService.UserService.Application.Interfaces.Services;
 using UserService.UserService.Domain.Entities;
 using UserService.UserService.Infrastructure.Data;
+using UserService.UserService.Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +21,7 @@ builder.Services.AddGrpc();
 builder.Services.AddDbContext<UserDbContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("WebApiDatabase")));
 
 builder.Services.AddScoped<IUserProfileService, UserProfileService>();
+builder.Services.AddScoped<IUserProfileRepository, UserProfileRepository>();
 
 
 var app = builder.Build();

@@ -34,4 +34,23 @@ public class AccountController : ControllerBase
         
         return Ok();
     }
+
+    [HttpGet("verify-email")]
+    public async Task<ActionResult<bool>> VerifyEmail(string email)
+    {
+        bool exist = await _accountService.VerifyEmail(email);
+        if (!exist)
+            return Ok(true);    
+        
+        return BadRequest("Email is already in use");
+    }
+
+    [HttpGet("verify-user")]
+    public async Task<ActionResult<bool>> VerifyUsername(string username)
+    {
+        bool exist = await _accountService.VerifyUsername(username);
+        if (!exist) 
+            return Ok(true);
+        return BadRequest("Username is already in use");
+    }
 }

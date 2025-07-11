@@ -25,6 +25,7 @@ public class TokenService : ITokenService
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
         };
         
+        Console.WriteLine(_config["Jwt:Key"]);
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 

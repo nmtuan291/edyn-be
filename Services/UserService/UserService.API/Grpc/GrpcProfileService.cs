@@ -1,3 +1,4 @@
+using Grpc.Core;
 using UserService.Grpc;
 using UserService.UserService.Application.Interfaces.Repositories;
 using UserService.UserService.Application.Interfaces.Services;
@@ -13,7 +14,7 @@ public class GrpcProfileService: ProfileService.ProfileServiceBase
         _userProfileService = userProfileService;
     }
     
-    public async Task<CreateProfileResponse> CreateProfile(CreateProfileRequest request)
+    public override async Task<CreateProfileResponse> CreateProfile(CreateProfileRequest request, ServerCallContext context)
     {
         try
         {

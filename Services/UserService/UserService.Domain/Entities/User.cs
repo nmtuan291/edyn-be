@@ -10,7 +10,12 @@ public class User
     public DateTime? Birthday { get; set; }
     
     [Required]
+    public string Username { get; set; }
+    
+    [Required]
     public string Avatar { get; set; }
     
     public string? Bio { get; set; } 
+    
+    public int? Gender { get; set; }
 }
