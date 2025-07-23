@@ -7,8 +7,7 @@ using ForumService.ForumService.Application.Interfaces.Services;
 using Microsoft.AspNetCore.Mvc;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
-namespace ForumService.ForumService.Application
-{
+namespace ForumService.ForumService.Application;
 
   public class ForumThreadService : IForumThreadService
   {
@@ -39,6 +38,11 @@ namespace ForumService.ForumService.Application
         Tags = t.Tags,
         Upvote = t.Upvote,
         Title = t.Title,
+        PollItems = t.PollItems?.Select(p => new PollItemDto()
+        {
+          PollContent = p.PollContent,
+          VoteCount = p.VoteCount,
+        }).ToList()
       });
     }
 
@@ -108,5 +112,32 @@ namespace ForumService.ForumService.Application
       await _unitOfWork.ForumThreads.DeleteThreadByIdAsync(threadId);
       await _unitOfWork.CommitAsync();
     }
+
+    public async Task CreateForumThread(ForumThreadDto forumThread, Guid userId)
+    {
+      Guid forumThreadId = Guid.NewGuid();
+      ForumThread newThread = new()
+      {
+        Id = forumThreadId,
+        Content = forumThread.Content,
+        CreatedAt = DateTime.UtcNow,
+        CreatorId = userId,
+        ForumId = forumThread.ForumId,
+        IsPinned = forumThread.IsPinned,
+        LastUpdatedAt = DateTime.UtcNow,
+        Images = forumThread.Images,
+        PollItems = forumThread.PollItems?.Select(p => new Poll()
+        {
+          ThreadId = forumThreadId,
+          PollContent = p.PollContent,
+          VoteCount = p.VoteCount,
+        }).ToList(),
+        Title = forumThread.Title,
+        Slug = forumThread.Slug,
+      };
+      
+      await _unitOfWork.ForumThreads.InsertThreadAsync(newThread);
+      await _unitOfWork.CommitAsync();
+    }
 }
-}
+

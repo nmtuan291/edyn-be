@@ -13,6 +13,8 @@ namespace ForumService.ForumService.Infrastructure.Data
 
             modelBuilder.Entity<ForumUser>()
                 .HasKey(t => new { t.UserId, t.ForumId });
+            modelBuilder.Entity<Poll>()
+                .HasKey(p => new { p.ThreadId, p.PollContent });
         }
 
         public DbSet<Forum> Forums { get; set; }

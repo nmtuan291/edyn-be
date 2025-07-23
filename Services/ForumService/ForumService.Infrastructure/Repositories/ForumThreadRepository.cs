@@ -30,23 +30,15 @@ namespace ForumService.ForumService.Infrastructure.Repositories
             else if (sortBy == SortBy.Top)
             {
                 if (sortDate == SortDate.Day)
-                {
                     threads = threads.Where(t => t.CreatedAt > DateTime.UtcNow - TimeSpan.FromDays(1));
-                }
                 else if (sortDate == SortDate.Month)
-                {
                     threads = threads.Where(t => t.CreatedAt > DateTime.UtcNow - TimeSpan.FromDays(30));
-                }
                 else if (sortDate == SortDate.Year)
-                {
                     threads = threads.Where(t => t.CreatedAt > DateTime.UtcNow - TimeSpan.FromDays(365));
-                }
                 threads = threads.OrderByDescending(t => t.Upvote);
             }
             else if (sortBy == SortBy.Latest)
-            {
                 threads = threads.OrderByDescending(t => t.CreatedAt);
-            }
             
             threads = threads
                 .Skip((pageNumber - 1) * pageSize)
@@ -60,7 +52,7 @@ namespace ForumService.ForumService.Infrastructure.Repositories
             var comments = await _context.Comments
                 .Where(t => t.ThreadId == threadId)
                 .ToListAsync();
-
+            
             return comments;
         }
 
@@ -78,18 +70,14 @@ namespace ForumService.ForumService.Infrastructure.Repositories
         {
             var thread = await _context.Threads.FindAsync(threadId);
             if (thread != null)
-            {
                 _context.Threads.Remove(thread);
-            }
         }
 
         public async Task DeleteCommentById(Guid commentId)
         {
             var comment = await _context.Comments.FindAsync(commentId);
             if (comment != null)
-            {
                 _context.Comments.Remove(comment);
-            }
         }
     }
 }

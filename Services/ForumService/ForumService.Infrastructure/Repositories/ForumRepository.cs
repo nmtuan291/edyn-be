@@ -26,6 +26,13 @@ namespace ForumService.ForumService.Infrastructure.Repositories
                 .SingleOrDefaultAsync();
         }
 
+        public async Task<Forum?> GetForumByNameAsync(string name)
+        {
+            return await _context.Forums
+                .Where(f => f.Name == name) 
+                .SingleOrDefaultAsync();
+        }
+        
         public async Task<IEnumerable<Forum>> GetForumsAsync()
         {
             return await _context.Forums.ToListAsync();
@@ -41,19 +48,24 @@ namespace ForumService.ForumService.Infrastructure.Repositories
             return forum;
         }
 
-        public async Task InsertUserToForumAsync(Guid forumId, Guid userId, string permissions)
+        public async Task InsertUserToForumAsync(Guid forumId, Guid userId, string permissions, bool isModerator)
         {
             await _context.ForumUsers.AddAsync(new ForumUser
             {
                 ForumId = forumId, 
                 UserId = userId,
                 JoinedAt = DateTime.UtcNow,
-                Moderator = true,
+                Moderator = isModerator,
                 Active = true
             });
-            
-            // config - 
+            Console.WriteLine($"Created----------------------------{forumId}:{userId}");
             await _redis.StringSetAsync($"{forumId}:{userId}", permissions);
+        }
+
+        public async Task<string?> GetUserPermissionAsync(Guid forumId, Guid userId)
+        {
+            Console.WriteLine($"----------------------------{forumId}:{userId}");
+            return await _redis.StringGetAsync($"{forumId}:{userId}");
         }
     }
 }

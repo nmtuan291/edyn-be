@@ -14,9 +14,9 @@ namespace ForumService.ForumService.Application
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<ForumDto?> GetForum(Guid forumId)
+        public async Task<ForumDto?> GetForum(string forumName)
         {
-            Forum? forum = await _unitOfWork.Forums.GetForumByIdAsync(forumId);
+            Forum? forum = await _unitOfWork.Forums.GetForumByNameAsync(forumName);
 
             if (forum == null)
             {
@@ -25,7 +25,7 @@ namespace ForumService.ForumService.Application
 
             return new ForumDto
             {
-                Id = forumId,
+                Id = forum.Id,
                 Name = forum.Name,
                 ShortName = forum.ShortName,
                 CreatedAt = forum.CreatedAt,
@@ -72,7 +72,7 @@ namespace ForumService.ForumService.Application
             if (insertedForum == null)
                 return null;
             
-            await _unitOfWork.Forums.InsertUserToForumAsync(newForum.Id, parsedId, "--------");
+            await _unitOfWork.Forums.InsertUserToForumAsync(newForum.Id, parsedId, "--------", true);
             
             await _unitOfWork.CommitAsync();
 
@@ -91,7 +91,12 @@ namespace ForumService.ForumService.Application
 
         public async Task AddUserToForum(Guid forumId, Guid userId)
         {
-            await _unitOfWork.Forums.InsertUserToForumAsync(forumId, userId, "--------");
-        }  
+            await _unitOfWork.Forums.InsertUserToForumAsync(forumId, userId, "--------", false);
+        }
+
+        public async Task<string?> GetUserPermission(Guid forumId, Guid userId)
+        {
+            return await _unitOfWork.Forums.GetUserPermissionAsync(forumId, userId);
+        }
     }
 }

@@ -3,9 +3,11 @@ using ForumService.ForumService.Application.Interfaces.UnitOfWork;
 using ForumService.ForumService.Infrastructure.UnitOfWork;
 using ForumService.ForumService.API.Middlewares;
 using ForumService.ForumService.Application;
+using ForumService.ForumService.Application.Interfaces.Repositories;
 using ForumService.ForumService.Application.Interfaces.Services;
 using Microsoft.EntityFrameworkCore;
 using ForumService.ForumService.Infrastructure.Data;
+using ForumService.ForumService.Infrastructure.Repositories;
 using Microsoft.IdentityModel.Tokens;
 using StackExchange.Redis;
 
@@ -24,6 +26,8 @@ builder.Services.AddDbContext<ForumDbContext>(options => options.UseNpgsql(build
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IForumThreadService, ForumThreadService>();
 builder.Services.AddScoped<IForumService, ForumService.ForumService.Application.ForumService>();
+builder.Services.AddScoped<IForumThreadRepository, ForumThreadRepository>();
+builder.Services.AddScoped<IForumRepository, ForumRepository>();
 
 builder.Services.AddAuthentication(options =>
     {

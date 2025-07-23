@@ -18,6 +18,7 @@ namespace ForumService.ForumService.Domain.Entities
         public Guid CreatorId { get; set; }
 
         [Required]
+        [StringLength(300)]
         public string Title { get; set; }
 
         [Required]
@@ -26,7 +27,9 @@ namespace ForumService.ForumService.Domain.Entities
         [Required]
         public ICollection<Tag> Tags { get; set; }
 
-        public ICollection<string> Images { get; set; }
+        public ICollection<string>? Images { get; set; }
+        
+        public ICollection<Poll>? PollItems { get; set; }
 
         [Required]
         public string Content { get; set; }

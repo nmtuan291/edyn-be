@@ -28,16 +28,7 @@ namespace ForumService.ForumService.API.Controllers
             return Ok(forums);
         }
 
-        [HttpGet("{forumId}")]
-        public async Task<ActionResult<ForumDto>> GetForum(Guid forumId)
-        {
-            if (forumId == Guid.Empty)
-                return BadRequest("Forum ID is required");
 
-            var forum = await _forumService.GetForum(forumId);
-            return Ok(forum);
-        }
-        
         [Authorize]
         [HttpPost]
         public async Task<ActionResult> CreateForum([FromBody] ForumDto forumDto)
@@ -49,7 +40,7 @@ namespace ForumService.ForumService.API.Controllers
             if (createdForum == null)
                 return StatusCode(StatusCodes.Status500InternalServerError, "Failed to create forum");
             
-            return CreatedAtAction(nameof(GetForum), new { forumId = createdForum.Id }, createdForum);
+            return CreatedAtAction(nameof(GetForum), new { forumName = createdForum.Name }, createdForum);
         }
 
         [Authorize]
@@ -57,9 +48,36 @@ namespace ForumService.ForumService.API.Controllers
         public async Task<ActionResult> JoinForum(string forumId)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            await _forumService.AddUserToForum(Guid.Parse(forumId), Guid.Parse(userId));
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized("Invalid user id");
             
+            await _forumService.AddUserToForum(Guid.Parse(forumId), Guid.Parse(userId));
             return Ok();
         }
+
+        [HttpGet("{forumName}")]
+        public async Task<ActionResult<ForumDto>> GetForum(string forumName)
+        {
+            if (string.IsNullOrEmpty(forumName))
+                return BadRequest("Invalid forum name");
+            ForumDto? forum = await _forumService.GetForum(forumName);
+
+            return forum == null ?  NotFound("Forum not found") : Ok(forum);
+        }
+
+        [Authorize]
+        [HttpGet("{forumId}/permissions")]
+        public async Task<ActionResult<string?>> GetUserPermissions(string forumId)
+        {
+            if (!Guid.TryParse(forumId, out var forumGuid))
+                return BadRequest("Invalid forum ID");
+                
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(userId, out var userGuid) || string.IsNullOrEmpty(userId))
+                return Unauthorized("Invalid user ID");
+
+            string? permissions = await _forumService.GetUserPermission(Guid.Parse(forumId), Guid.Parse(userId));
+            return Ok(permissions);
+        } 
     }
 }
