@@ -9,7 +9,8 @@ namespace ForumService.ForumService.Application.Interfaces.Services
 
         Task<IEnumerable<ForumThreadDto>> GetThreadsByForumId(Guid forumId, int pageNumber, int pageSize,
             SortBy sortBy = SortBy.Hot, SortDate sortDate = SortDate.All);
-        Task InsertComment(CommentDto comment);
+        Task InsertComment(CommentDto comment, Guid userId, string username);
         Task CreateForumThread(ForumThreadDto forumThread, Guid userId);
+        Task<ForumThreadDto?> GetThreadById(Guid threadId);
     }
 }

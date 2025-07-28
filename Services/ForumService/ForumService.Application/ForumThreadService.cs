@@ -45,6 +45,27 @@ namespace ForumService.ForumService.Application;
         }).ToList()
       });
     }
+    
+    private List<CommentDto> MapCommentsToDto(IEnumerable<Comment> comments)
+    {
+      return comments.Select(c => new CommentDto
+      {
+        Id = c.Id,
+        ThreadId = c.ThreadId,
+        OwnerId = c.OwnerId,
+        OwnerName = c.OwnerName,
+        Content = c.Content,
+        Upvote = c.Upvote,
+        CreatedAt = c.CreatedAt,
+        ParentId = c.ParentId,
+        ChildrenComments = c.ChildrenComments != null
+          ? MapCommentsToDto(c.ChildrenComments)
+          : new List<CommentDto>(),
+        UpdatedAt = c.UpdatedAt,
+        Deleted = c.Deleted
+      }).ToList();
+    }
+    
 
     public async Task<IEnumerable<CommentDto>> GetCommentsByThreadId(Guid threadId)
     {
@@ -55,45 +76,28 @@ namespace ForumService.ForumService.Application;
 
       var comments = await _unitOfWork.ForumThreads.GetCommentByThreadIdAsync(threadId);
 
-      return comments.Select(c => new CommentDto
-        {
-          Id = c.Id,
-          ThreadId = c.ThreadId,
-          OwnerId = c.OwnerId,
-          Content = c.Content,
-          Upvote = c.Upvote,
-          CreatedAt = c.CreatedAt,
-          ParentId = c.ParentId,
-          ChildrenComments = c.ChildrenComments,
-          UpdatedAt = c.UpdatedAt,
-          Deleted = c.Deleted
-        })
-        .ToList();
+      return MapCommentsToDto(comments);
     }
 
-    public async Task InsertComment(CommentDto comment)
+    public async Task InsertComment(CommentDto comment, Guid userId, string ownerName)
     {
-      if (comment == null)
-      {
-        throw new ArgumentNullException(nameof(comment));
-      }
-
       if (comment.ThreadId == Guid.Empty)
       {
         throw new ArgumentException("Thread Id cannot be empty", nameof(comment));
       }
 
-      Comment cmt = new Comment
+      var cmt = new Comment
       {
         Id = Guid.NewGuid(),
         ThreadId = comment.ThreadId,
-        OwnerId = comment.OwnerId,
+        OwnerId = userId,
+        OwnerName = ownerName,
         Content = comment.Content,
         Upvote = comment.Upvote,
         ParentId = comment.ParentId,
-        ChildrenComments = comment.ChildrenComments,
+        ChildrenComments = new List<Comment>(),
         UpdatedAt = comment.UpdatedAt,
-        CreatedAt = comment.CreatedAt,
+        CreatedAt = DateTime.UtcNow,
         Deleted = comment.Deleted,
       };
 
@@ -138,6 +142,34 @@ namespace ForumService.ForumService.Application;
       
       await _unitOfWork.ForumThreads.InsertThreadAsync(newThread);
       await _unitOfWork.CommitAsync();
+    }
+
+    public async Task<ForumThreadDto?> GetThreadById(Guid threadId)
+    {
+      var thread = await _unitOfWork.ForumThreads.GetThreadByIdAsync(threadId);
+      if (thread == null)
+        return null;
+      
+      return new ForumThreadDto()
+      {
+        Id = thread.Id,
+        CreatedAt = thread.CreatedAt,
+        Content = thread.Content,
+        CreatorId = thread.CreatorId,
+        ForumId = thread.ForumId,
+        Images = thread.Images,
+        IsPinned = thread.IsPinned,
+        LastUpdatedAt = thread.LastUpdatedAt,
+        Slug = thread.Slug,
+        Tags = thread.Tags,
+        Upvote = thread.Upvote,
+        Title = thread.Title,
+        PollItems = thread.PollItems?.Select(p => new PollItemDto()
+        {
+          PollContent = p.PollContent,
+          VoteCount = p.VoteCount,
+        }).ToList(),
+      };
     }
 }
 

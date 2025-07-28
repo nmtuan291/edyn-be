@@ -16,6 +16,9 @@ namespace ForumService.ForumService.Domain.Entities
 
         [Required]
         public Guid OwnerId { get; set; }
+        
+        [Required]
+        public string OwnerName { get; set; }
 
         [Required]
         [StringLength(500)]
@@ -27,9 +30,9 @@ namespace ForumService.ForumService.Domain.Entities
         public Guid? ParentId { get; set; }
 
         [ForeignKey("ParentId")]
-        public Comment ParmentComment { get; set; }
+        public Comment? ParentComment { get; set; }
 
-        public ICollection<Comment> ChildrenComments { get; set; }
+        public ICollection<Comment>? ChildrenComments { get; set; }
 
         public DateTime? UpdatedAt { get; set; }
 

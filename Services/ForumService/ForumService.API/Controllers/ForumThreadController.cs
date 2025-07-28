@@ -30,5 +30,41 @@ namespace ForumService.ForumService.API.Controllers
             await _forumThreadService.CreateForumThread(forumThread, Guid.Parse(userId));
             return Ok();
         }
+
+        [HttpGet("{forumId}")]
+        public async Task<ActionResult<IEnumerable<ForumThreadDto>>> GetForumThreads(Guid forumId) 
+        {
+            var forumThreads = await _forumThreadService.GetThreadsByForumId(forumId, 1, 10);
+            return Ok(forumThreads);
+        }
+
+        [HttpGet("thread/{threadId}")]
+        public async Task<ActionResult<IEnumerable<ForumThreadDto>>> GetThreadById(Guid threadId)
+        {
+            var thread = await _forumThreadService.GetThreadById(threadId);
+            if (thread == null)
+                return NotFound("Thread not found");
+            return Ok(thread);
+        }
+        
+        [Authorize]
+        [HttpPost("comment/create")]
+        public async Task<ActionResult> AddComment(CommentDto comment)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var username =  User.FindFirst("name")?.Value;
+            if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(username))
+                return Unauthorized("Invalid user id");
+            
+            await _forumThreadService.InsertComment(comment, Guid.Parse(userId), username);
+            return Ok();
+        }
+
+        [HttpGet("{threadId}/comments")]
+        public async Task<ActionResult<IEnumerable<CommentDto>>> GetComments(Guid threadId)
+        {
+            var commments = await _forumThreadService.GetCommentsByThreadId(threadId);
+            return Ok(commments);
+        }
     }
 }

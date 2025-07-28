@@ -16,12 +16,13 @@ public class TokenService : ITokenService
         _config = config;
     }
     
-    public string GenerateJwtToken(string userId, string email)
+    public string GenerateJwtToken(string userId, string email, string username)
     {
         var claims = new List<Claim>
         {
             new Claim(JwtRegisteredClaimNames.Sub, userId),
             new Claim(JwtRegisteredClaimNames.Email, email),
+            new Claim(JwtRegisteredClaimNames.Name, username),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
         };
         
@@ -33,7 +34,7 @@ public class TokenService : ITokenService
             issuer: _config["Jwt:Issuer"],
             audience: _config["Jwt:Audience"],
             claims: claims,
-            expires: DateTime.Now.AddMinutes(30),
+            expires: DateTime.Now.AddDays(365),
             signingCredentials: creds
         );
             

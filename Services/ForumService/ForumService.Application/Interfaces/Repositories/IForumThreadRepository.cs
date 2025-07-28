@@ -13,5 +13,6 @@ namespace ForumService.ForumService.Application.Interfaces.Repositories
         Task DeleteCommentById(Guid commentId);
         Task DeleteThreadByIdAsync(Guid threadId);
         Task InsertThreadAsync(ForumThread thread);
+        Task<ForumThread?> GetThreadByIdAsync(Guid threadId);
     }
 }

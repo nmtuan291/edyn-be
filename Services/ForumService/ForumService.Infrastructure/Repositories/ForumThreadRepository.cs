@@ -24,8 +24,9 @@ namespace ForumService.ForumService.Infrastructure.Repositories
             
             if (sortBy == SortBy.Hot)
             {
-                threads = threads.Where(t => t.CreatedAt > DateTime.UtcNow - TimeSpan.FromDays(1))
-                    .OrderByDescending(t => t.Upvote);
+                // Commented for testing
+                /*threads = threads.Where(t => t.CreatedAt > DateTime.UtcNow - TimeSpan.FromDays(1))
+                    .OrderByDescending(t => t.Upvote);*/
             } 
             else if (sortBy == SortBy.Top)
             {
@@ -40,20 +41,36 @@ namespace ForumService.ForumService.Infrastructure.Repositories
             else if (sortBy == SortBy.Latest)
                 threads = threads.OrderByDescending(t => t.CreatedAt);
             
+            
             threads = threads
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize);
             
-            return await threads.ToListAsync();
+            
+            return await threads
+                .Include(t => t.PollItems)
+                .ToListAsync();
         }
 
         public async Task<IEnumerable<Comment>> GetCommentByThreadIdAsync(Guid threadId)
         {
-            var comments = await _context.Comments
+            var  allComments = await _context.Comments
                 .Where(t => t.ThreadId == threadId)
                 .ToListAsync();
+
+            var commentDict = allComments.ToDictionary(c => c.Id);
+            foreach (var comment in allComments)
+            {
+                if (comment.ParentId != null && commentDict.TryGetValue(comment.ParentId.Value, out var parentComment))
+                {
+                    if (parentComment.ChildrenComments == null) 
+                        parentComment.ChildrenComments = new List<Comment>();
+                    
+                    parentComment.ChildrenComments.Add(comment);
+                }
+            }
             
-            return comments;
+            return allComments.Where(comment => comment.ParentId == null);
         }
 
         public async Task InsertCommentAsync(Comment comment)
@@ -78,6 +95,14 @@ namespace ForumService.ForumService.Infrastructure.Repositories
             var comment = await _context.Comments.FindAsync(commentId);
             if (comment != null)
                 _context.Comments.Remove(comment);
+        }
+
+        public async Task<ForumThread?> GetThreadByIdAsync(Guid threadId)
+        {
+            Console.WriteLine($"-----------------------------------{threadId}");
+            return await _context.Threads
+                .Include(t => t.PollItems)
+                .SingleOrDefaultAsync(t => t.Id == threadId);
         }
     }
 }

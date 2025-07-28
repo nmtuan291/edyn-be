@@ -45,6 +45,15 @@
       }
     },
     {
+      "DownstreamPathTemplate": "/api/forumthread/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "localhost", "Port": 5220 }
+      ],
+      "UpstreamPathTemplate": "/forumthread/{everything}",
+      "UpstreamHttpMethod": [ "GET" ]
+    },
+    {
       "DownstreamPathTemplate": "/api/account/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [

@@ -32,7 +32,7 @@ public class AccountService : IAccountService
         if (!isPasswordValid)
             return null;
 
-        string token = _tokenService.GenerateJwtToken(user.Id, user.Email);
+        string token = _tokenService.GenerateJwtToken(user.Id, user.Email, user.UserName);
 
         return new LoginResponseDto
         {

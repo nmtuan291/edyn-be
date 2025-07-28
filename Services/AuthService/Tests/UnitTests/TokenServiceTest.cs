@@ -26,9 +26,9 @@ public class TokenServiceTest
         // Arrange
         string userId = Guid.NewGuid().ToString();
         string email = "testemail@mail.com";
-        
+        string username = "testuser";
         // Act
-        string token = _tokenService.GenerateJwtToken(userId, email);
+        string token = _tokenService.GenerateJwtToken(userId, email, username);
         
         //Assert
         Assert.NotNull(token);
