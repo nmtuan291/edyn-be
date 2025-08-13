@@ -6,12 +6,12 @@ This project is for my study of microservice architecture and the course 'Distri
 
 This project implements a simple microservices architecture with the following components(at this moment):
 
-- **API Gateway** (Port 5057) - Ocelot-based gateway for routing requests
-- **AuthService** (Port 5299) - JWT-based authentication and authorization
-- **UserService** (Port 5161) - User management and profiles
-- **ForumService** (Port 5220) - Forum threads and discussions
-- **ChatService** (Port 5033) - Real-time messaging with SignalR
-- **NotificationService** (Port 5190) - Real-time notifications with SignalR
+- **API Gateway** - Ocelot-based gateway for routing requests
+- **AuthService** - JWT-based authentication and authorization
+- **UserService** - User management and profiles
+- **ForumService** - Forum threads and discussions
+- **ChatService** - Real-time messaging with SignalR
+- **NotificationService** - Real-time notifications with SignalR
 
 ## Technologies Used
 
@@ -25,12 +25,7 @@ This project implements a simple microservices architecture with the following c
 
 - ## Getting Started
 
-### 1. Setup Infrastructure
-
-```bash
-# Start PostgreSQL, RabbitMQ, and Redis
-docker-compose up -d postgres rabbitmq redis
-```
+### 1. Setup Infrastructure(PostgreSQL, Redis, RabbitMQ)
 
 ### 2. Database Migration
 
