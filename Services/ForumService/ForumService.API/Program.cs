@@ -28,6 +28,7 @@ builder.Services.AddScoped<IForumThreadService, ForumThreadService>();
 builder.Services.AddScoped<IForumService, ForumService.ForumService.Application.ForumService>();
 builder.Services.AddScoped<IForumThreadRepository, ForumThreadRepository>();
 builder.Services.AddScoped<IForumRepository, ForumRepository>();
+builder.Services.AddScoped<ICommentNotificationSender, CommentNotificationSender>();
 
 builder.Services.AddAuthentication(options =>
     {
@@ -42,7 +43,7 @@ builder.Services.AddAuthentication(options =>
             ValidIssuer = "http://localhost:5299",
             ValidateAudience = false,
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("fmcE8xVOt3k0CgmfCyuVEkFAZxnQbql5")),
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("fmcE8xVOt3k0CgmfCyuVEkFAZxnQbql5")), // For testing, the key will be removed later
         };
     });
 

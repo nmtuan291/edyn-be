@@ -16,7 +16,7 @@ namespace ForumService.ForumService.Infrastructure.Repositories
             _context = context;
         }
 
-        public async Task<IEnumerable<ForumThread>> GetThreadsByForumIdAsync(Guid forumId, SortBy sortBy, 
+        public async Task<List<ForumThread>> GetThreadsByForumIdAsync(Guid forumId, SortBy sortBy, 
             SortDate sortDate, int pageNumber, int pageSize)
         {
             var threads = _context.Threads
@@ -52,7 +52,7 @@ namespace ForumService.ForumService.Infrastructure.Repositories
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<Comment>> GetCommentByThreadIdAsync(Guid threadId)
+        public async Task<List<Comment>> GetCommentByThreadIdAsync(Guid threadId)
         {
             var  allComments = await _context.Comments
                 .Where(t => t.ThreadId == threadId)
@@ -70,7 +70,7 @@ namespace ForumService.ForumService.Infrastructure.Repositories
                 }
             }
             
-            return allComments.Where(comment => comment.ParentId == null);
+            return allComments.Where(comment => comment.ParentId == null).ToList();
         }
 
         public async Task InsertCommentAsync(Comment comment)
@@ -95,6 +95,13 @@ namespace ForumService.ForumService.Infrastructure.Repositories
             var comment = await _context.Comments.FindAsync(commentId);
             if (comment != null)
                 _context.Comments.Remove(comment);
+        }
+
+        public async Task<Comment?> GetParentCommentAsync(Guid commentId)
+        {
+            return await _context.Comments
+                .Where(c => c.Id == commentId)
+                .SingleOrDefaultAsync();
         }
 
         public async Task<ForumThread?> GetThreadByIdAsync(Guid threadId)

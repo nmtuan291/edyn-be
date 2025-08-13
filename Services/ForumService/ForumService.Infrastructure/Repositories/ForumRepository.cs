@@ -33,7 +33,7 @@ namespace ForumService.ForumService.Infrastructure.Repositories
                 .SingleOrDefaultAsync();
         }
         
-        public async Task<IEnumerable<Forum>> GetForumsAsync()
+        public async Task<List<Forum>> GetForumsAsync()
         {
             return await _context.Forums.ToListAsync();
         }
@@ -58,13 +58,11 @@ namespace ForumService.ForumService.Infrastructure.Repositories
                 Moderator = isModerator,
                 Active = true
             });
-            Console.WriteLine($"Created----------------------------{forumId}:{userId}");
             await _redis.StringSetAsync($"{forumId}:{userId}", permissions);
         }
 
         public async Task<string?> GetUserPermissionAsync(Guid forumId, Guid userId)
         {
-            Console.WriteLine($"----------------------------{forumId}:{userId}");
             return await _redis.StringGetAsync($"{forumId}:{userId}");
         }
     }

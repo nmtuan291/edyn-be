@@ -7,7 +7,7 @@ namespace ForumService.ForumService.Application.Interfaces.Repositories
     {
         Task<Forum?> InsertForumAsync(Forum forum);
         Task<Forum?> GetForumByIdAsync(Guid forumId);
-        Task<IEnumerable<Forum>> GetForumsAsync();
+        Task<List<Forum>> GetForumsAsync();
         Task InsertUserToForumAsync(Guid forumId, Guid userId, string permissions,  bool isModerator);
         Task<Forum?> GetForumByNameAsync(string name);
         Task<string?> GetUserPermissionAsync(Guid forumId, Guid userId);

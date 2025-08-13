@@ -36,7 +36,7 @@ namespace ForumService.ForumService.Application
             };
         }
 
-        public async Task<IEnumerable<ForumDto>> GetForums()
+        public async Task<List<ForumDto>> GetForums()
         {
             var forums = await _unitOfWork.Forums.GetForumsAsync();
 
@@ -50,7 +50,7 @@ namespace ForumService.ForumService.Application
                 ForumBanner = forum.ForumBanner,
                 ForumImage = forum.ForumImage,
                 CreatorId = forum.CreatorId
-            });
+            }).ToList();
         }
 
         public async Task<ForumDto?> AddForum(ForumDto forum, string userId)

@@ -22,7 +22,7 @@ namespace ForumService.ForumService.API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ForumDto>>> GetAllForums()
+        public async Task<ActionResult<List<ForumDto>>> GetAllForums()
         {
             var forums = await _forumService.GetForums();
             return Ok(forums);

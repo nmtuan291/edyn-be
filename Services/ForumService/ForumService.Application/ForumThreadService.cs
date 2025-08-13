@@ -12,13 +12,15 @@ namespace ForumService.ForumService.Application;
   public class ForumThreadService : IForumThreadService
   {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICommentNotificationSender _commentNotificationSender;
 
-    public ForumThreadService(IUnitOfWork unitOfWork)
+    public ForumThreadService(IUnitOfWork unitOfWork, ICommentNotificationSender commentNotificationSender)
     {
       _unitOfWork = unitOfWork;
+      _commentNotificationSender = commentNotificationSender;
     }
 
-    public async Task<IEnumerable<ForumThreadDto>> GetThreadsByForumId(Guid forumId, int pageNumber, int pageSize, 
+    public async Task<List<ForumThreadDto>> GetThreadsByForumId(Guid forumId, int pageNumber, int pageSize, 
       SortBy sortBy = SortBy.Hot, SortDate sortDate = SortDate.All)
     {
       var threads = await _unitOfWork.ForumThreads.GetThreadsByForumIdAsync(forumId, sortBy, 
@@ -43,7 +45,7 @@ namespace ForumService.ForumService.Application;
           PollContent = p.PollContent,
           VoteCount = p.VoteCount,
         }).ToList()
-      });
+      }).ToList();
     }
     
     private List<CommentDto> MapCommentsToDto(IEnumerable<Comment> comments)
@@ -67,7 +69,7 @@ namespace ForumService.ForumService.Application;
     }
     
 
-    public async Task<IEnumerable<CommentDto>> GetCommentsByThreadId(Guid threadId)
+    public async Task<List<CommentDto>> GetCommentsByThreadId(Guid threadId)
     {
       if (threadId == Guid.Empty)
       {
@@ -103,6 +105,9 @@ namespace ForumService.ForumService.Application;
 
       await _unitOfWork.ForumThreads.InsertCommentAsync(cmt);
       await _unitOfWork.CommitAsync();
+      var parentComment = await _unitOfWork.ForumThreads.GetParentCommentAsync(cmt.ParentId ?? Guid.Empty);
+      await _commentNotificationSender.SendNotification(parentComment?.OwnerId.ToString() ?? "", 
+        parentComment?.OwnerName ?? "",parentComment?.Content ?? "", parentComment?.ThreadId.ToString() ?? "");
     }
 
     public async Task DeleteComment(Guid commentId)

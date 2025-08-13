@@ -32,14 +32,14 @@ namespace ForumService.ForumService.API.Controllers
         }
 
         [HttpGet("{forumId}")]
-        public async Task<ActionResult<IEnumerable<ForumThreadDto>>> GetForumThreads(Guid forumId) 
+        public async Task<ActionResult<List<ForumThreadDto>>> GetForumThreads(Guid forumId) 
         {
             var forumThreads = await _forumThreadService.GetThreadsByForumId(forumId, 1, 10);
             return Ok(forumThreads);
         }
 
         [HttpGet("thread/{threadId}")]
-        public async Task<ActionResult<IEnumerable<ForumThreadDto>>> GetThreadById(Guid threadId)
+        public async Task<ActionResult<ForumThreadDto>> GetThreadById(Guid threadId)
         {
             var thread = await _forumThreadService.GetThreadById(threadId);
             if (thread == null)
@@ -61,7 +61,7 @@ namespace ForumService.ForumService.API.Controllers
         }
 
         [HttpGet("{threadId}/comments")]
-        public async Task<ActionResult<IEnumerable<CommentDto>>> GetComments(Guid threadId)
+        public async Task<ActionResult<List<CommentDto>>> GetComments(Guid threadId)
         {
             var commments = await _forumThreadService.GetCommentsByThreadId(threadId);
             return Ok(commments);
