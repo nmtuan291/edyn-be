@@ -9,5 +9,6 @@ namespace ForumService.ForumService.Application.Interfaces.Services
         Task<List<ForumDto>> GetForums();
         Task AddUserToForum(Guid forumId, Guid userId);
         Task<string?> GetUserPermission(Guid forumId, Guid userId);
+        Task<List<ForumUserDto>> GetJoinedForums(Guid userId);
     }
 }

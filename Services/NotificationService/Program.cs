@@ -41,7 +41,7 @@ builder.Services.AddAuthentication(options =>
             ValidIssuer = "http://localhost:5299",
             ValidateAudience = false,
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("fmcE8xVOt3k0CgmfCyuVEkFAZxnQbql5")), // For testing, the key will be remove later
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("fmcE8xVOt3k0CgmfCyuVEkFAZxnQbql5")), // For testing, the key will be removed later
         };
         
         options.Events = new JwtBearerEvents

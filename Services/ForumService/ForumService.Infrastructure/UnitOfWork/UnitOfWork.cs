@@ -19,7 +19,7 @@ namespace ForumService.ForumService.Infrastructure.UnitOfWork
         {
             _context = context;
             _redis = redis;
-            ForumThreads = new ForumThreadRepository(_context);
+            ForumThreads = new ForumThreadRepository(_context, _redis);
             Forums = new ForumRepository(_context, _redis);
         }
 

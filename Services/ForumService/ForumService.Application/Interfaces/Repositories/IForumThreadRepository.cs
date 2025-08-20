@@ -15,5 +15,12 @@ namespace ForumService.ForumService.Application.Interfaces.Repositories
         Task InsertThreadAsync(ForumThread thread);
         Task<ForumThread?> GetThreadByIdAsync(Guid threadId);
         Task<Comment?> GetParentCommentAsync(Guid commentId);
+        void UpdateThread(ForumThread thread);
+        Task AddThreadVoteAsync(ThreadVote vote, Guid forumId);
+        Task DeleteThreadVote(ThreadVote vote, Guid forumId);
+        Task<ThreadVote?> GetThreadVoteAsync(Guid threadId, Guid userId);
+        Task UpdateThreadVote(ThreadVote vote, Guid forumId);
+        Task<int> CountUpvotesAsync(Guid threadId);
+        Task<Dictionary<Guid, bool>> GetVotedThreadsAsync(Guid userId, Guid forumId);
     }
 }

@@ -11,5 +11,6 @@ namespace ForumService.ForumService.Application.Interfaces.Repositories
         Task InsertUserToForumAsync(Guid forumId, Guid userId, string permissions,  bool isModerator);
         Task<Forum?> GetForumByNameAsync(string name);
         Task<string?> GetUserPermissionAsync(Guid forumId, Guid userId);
+        Task<List<ForumUser>> GetJoinedForumsByUserIdAsync(Guid userId);
     }
 }

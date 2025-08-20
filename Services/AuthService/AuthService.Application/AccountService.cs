@@ -6,6 +6,7 @@ using UserService.Grpc;
 
 namespace AuthService.AuthService.Application;
 
+// TODO: Refresh token
 public class AccountService : IAccountService
 {
     private readonly UserManager<Account> _userManager;
@@ -55,8 +56,8 @@ public class AccountService : IAccountService
         return new AccountDto
         {
             Id = account.Id,
-            Email = account.Email,
-            UserName = account.UserName,
+            Email = account.Email ?? "",
+            UserName = account.UserName ?? "",
             IsActive = true
         };
     }

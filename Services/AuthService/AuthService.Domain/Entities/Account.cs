@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace AuthService.AuthService.Domain.Entities;
 
-public class Account: IdentityUser
+public class Account : IdentityUser
 {
     public string? RefreshToken { get; set; }
     public DateTime CreatedAt { get; set; }

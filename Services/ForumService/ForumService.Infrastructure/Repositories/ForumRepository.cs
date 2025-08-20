@@ -65,5 +65,14 @@ namespace ForumService.ForumService.Infrastructure.Repositories
         {
             return await _redis.StringGetAsync($"{forumId}:{userId}");
         }
+
+        public async Task<List<ForumUser>> GetJoinedForumsByUserIdAsync(Guid userId)
+        {
+            var forums = await _context.ForumUsers
+                .Where(f => f.UserId == userId)
+                .Include(f => f.Forum)
+                .ToListAsync();
+            return forums;
+        }
     }
 }

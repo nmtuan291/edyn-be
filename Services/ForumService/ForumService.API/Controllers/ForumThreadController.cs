@@ -2,6 +2,7 @@ using System.Security.Claims;
 using ForumService.ForumService.Application.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using ForumService.ForumService.Application.Interfaces.Services;
+using ForumService.ForumService.Application.Requests;
 using Microsoft.AspNetCore.Authorization;
 
 namespace ForumService.ForumService.API.Controllers
@@ -19,7 +20,7 @@ namespace ForumService.ForumService.API.Controllers
 
         [Authorize]
         [HttpPost]
-        public async Task<ActionResult> Create(ForumThreadDto forumThread)
+        public async Task<ActionResult> CreateThread(ForumThreadDto forumThread)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userId))
@@ -30,11 +31,13 @@ namespace ForumService.ForumService.API.Controllers
             await _forumThreadService.CreateForumThread(forumThread, Guid.Parse(userId));
             return Ok();
         }
-
+        
+        [AllowAnonymous]
         [HttpGet("{forumId}")]
         public async Task<ActionResult<List<ForumThreadDto>>> GetForumThreads(Guid forumId) 
         {
-            var forumThreads = await _forumThreadService.GetThreadsByForumId(forumId, 1, 10);
+            var userId =  User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var forumThreads = await _forumThreadService.GetThreadsByForumId(forumId, userId, 1, 10);
             return Ok(forumThreads);
         }
 
@@ -65,6 +68,18 @@ namespace ForumService.ForumService.API.Controllers
         {
             var commments = await _forumThreadService.GetCommentsByThreadId(threadId);
             return Ok(commments);
+        }
+        
+        [Authorize]
+        [HttpPost("thread/vote")]
+        public async Task<ActionResult<ForumThreadDto?>> Vote(VoteRequest voteRequest)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized("Invalid user id");
+            
+            return await _forumThreadService.UpdateThreadVote(voteRequest.ThreadId, 
+                Guid.Parse(userId), voteRequest.IsDownvote);
         }
     }
 }

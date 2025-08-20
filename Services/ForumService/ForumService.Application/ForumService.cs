@@ -1,4 +1,5 @@
 ﻿using ForumService.ForumService.Application.DTOs;
+using ForumService.ForumService.Application.Exceptions;
 using ForumService.ForumService.Application.Interfaces.UnitOfWork;
 using ForumService.ForumService.Domain.Entities;
 using ForumService.ForumService.Application.Interfaces.Services;
@@ -91,12 +92,31 @@ namespace ForumService.ForumService.Application
 
         public async Task AddUserToForum(Guid forumId, Guid userId)
         {
+            var forum = await _unitOfWork.Forums.GetForumByIdAsync(forumId);
+            if (forum == null)
+                throw new ForumNotFoundException(forumId);
+                
             await _unitOfWork.Forums.InsertUserToForumAsync(forumId, userId, "--------", false);
         }
 
         public async Task<string?> GetUserPermission(Guid forumId, Guid userId)
         {
+            var forum = await _unitOfWork.Forums.GetForumByIdAsync(forumId);
+            if (forum == null)
+                throw new ForumNotFoundException(forumId);
+            
             return await _unitOfWork.Forums.GetUserPermissionAsync(forumId, userId);
+        }
+
+        public async Task<List<ForumUserDto>> GetJoinedForums(Guid userId)
+        {
+            return (await _unitOfWork.Forums.GetJoinedForumsByUserIdAsync(userId))
+                .Select(f => new ForumUserDto()
+                {
+                    ForumId = f.ForumId,
+                    Name = f.Forum.Name,
+                    ForumImage = f.Forum.ForumImage,
+                }).ToList();
         }
     }
 }

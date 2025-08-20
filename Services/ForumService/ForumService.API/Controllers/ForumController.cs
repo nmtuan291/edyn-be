@@ -34,6 +34,8 @@ namespace ForumService.ForumService.API.Controllers
         public async Task<ActionResult> CreateForum([FromBody] ForumDto forumDto)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
             
             var createdForum = await _forumService.AddForum(forumDto, userId);
             
@@ -49,7 +51,7 @@ namespace ForumService.ForumService.API.Controllers
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userId))
-                return Unauthorized("Invalid user id");
+                return Unauthorized();
             
             await _forumService.AddUserToForum(Guid.Parse(forumId), Guid.Parse(userId));
             return Ok();
@@ -62,7 +64,7 @@ namespace ForumService.ForumService.API.Controllers
                 return BadRequest("Invalid forum name");
             ForumDto? forum = await _forumService.GetForum(forumName);
 
-            return forum == null ?  NotFound("Forum not found") : Ok(forum);
+            return forum == null ?  NotFound() : forum;
         }
 
         [Authorize]
@@ -77,7 +79,19 @@ namespace ForumService.ForumService.API.Controllers
                 return Unauthorized("Invalid user ID");
 
             string? permissions = await _forumService.GetUserPermission(Guid.Parse(forumId), Guid.Parse(userId));
-            return Ok(permissions);
-        } 
+            return permissions;
+        }
+
+        [Authorize]
+        [HttpGet("/forums/joined")]
+        public async Task<ActionResult<List<ForumUserDto>>> GetAllJoinedForums()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+            
+            var forums = await _forumService.GetJoinedForums(Guid.Parse(userId));
+            return forums;
+        }
     }
 }

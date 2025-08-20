@@ -20,11 +20,15 @@ namespace ForumService.ForumService.Application;
       _commentNotificationSender = commentNotificationSender;
     }
 
-    public async Task<List<ForumThreadDto>> GetThreadsByForumId(Guid forumId, int pageNumber, int pageSize, 
+    public async Task<List<ForumThreadDto>> GetThreadsByForumId(Guid forumId, string? userId, int pageNumber, int pageSize, 
       SortBy sortBy = SortBy.Hot, SortDate sortDate = SortDate.All)
     {
       var threads = await _unitOfWork.ForumThreads.GetThreadsByForumIdAsync(forumId, sortBy, 
         sortDate, pageNumber, pageSize);
+
+      var votedThreads = string.IsNullOrEmpty(userId)
+        ? new Dictionary<Guid, bool>()
+        : await _unitOfWork.ForumThreads.GetVotedThreadsAsync(Guid.Parse(userId), forumId);;
       
       return threads.Select(t => new ForumThreadDto()
       {
@@ -40,6 +44,9 @@ namespace ForumService.ForumService.Application;
         Tags = t.Tags,
         Upvote = t.Upvote,
         Title = t.Title,
+        Vote = !string.IsNullOrEmpty(userId) 
+          ? votedThreads.TryGetValue(t.Id, out var v) ? (v ? "down" : "up") : "none"
+          : "none",
         PollItems = t.PollItems?.Select(p => new PollItemDto()
         {
           PollContent = p.PollContent,
@@ -174,6 +181,82 @@ namespace ForumService.ForumService.Application;
           PollContent = p.PollContent,
           VoteCount = p.VoteCount,
         }).ToList(),
+      };
+    }
+    
+    /*public async Task<List<ForumThreadDto>> GetThreadsByJoinForums(Guid userId, int page = 0, int pageSize = 10)
+    {
+      var joinedForums =  await _unitOfWork.Forums.GetJoinedForumsByUserIdAsync(userId);
+      List<ForumThreadDto> threads = new List<ForumThreadDto>();
+
+      foreach (var forum in joinedForums)
+      {
+        var thread = await _unitOfWork.Forums.GetForumByNameAsync(forum.Forum.Name);
+        // TODO
+      }
+    }*/
+
+    public async Task<ForumThreadDto?> UpdateThreadVote(Guid threadId, Guid userId, bool isDownVote = false)
+    {
+      var thread = await _unitOfWork.ForumThreads.GetThreadByIdAsync(threadId);
+      if (thread == null)
+        return null;
+      
+      var vote = await _unitOfWork.ForumThreads.GetThreadVoteAsync(threadId, userId);
+      if (vote == null)
+      {
+        Console.WriteLine($"Thread vote {threadId} not found, create new vote");
+        vote = new ThreadVote()
+        {
+          ThreadId = thread.Id,
+          UserId = userId,
+          DownVote = isDownVote,
+        };
+        await _unitOfWork.ForumThreads.AddThreadVoteAsync(vote, thread.ForumId);
+        Console.WriteLine("Prepare to add new vote");
+        
+      }
+      else
+      {
+        if (isDownVote == vote.DownVote)
+        {
+          await _unitOfWork.ForumThreads.DeleteThreadVote(vote, thread.ForumId);
+        }
+        else
+        {
+          vote.DownVote = isDownVote;
+          await _unitOfWork.ForumThreads.UpdateThreadVote(vote, thread.ForumId);
+        }
+      }
+      await _unitOfWork.CommitAsync();
+      Console.WriteLine("Committed vote");
+      
+      
+      thread.Upvote = await _unitOfWork.ForumThreads.CountUpvotesAsync(thread.Id);
+      Console.WriteLine($"Thread upvote: {thread.Upvote}");
+      _unitOfWork.ForumThreads.UpdateThread(thread);
+      
+      await _unitOfWork.CommitAsync();
+      
+      return new ForumThreadDto()
+      {
+        Id = thread.Id,
+        CreatedAt = thread.CreatedAt,
+        Content = thread.Content,
+        CreatorId = thread.CreatorId,
+        ForumId = thread.ForumId,
+        Images = thread.Images,
+        IsPinned = thread.IsPinned,
+        LastUpdatedAt = thread.LastUpdatedAt,
+        Slug = thread.Slug,
+        Tags = thread.Tags,
+        Upvote = thread.Upvote,
+        Title = thread.Title,
+        PollItems = thread.PollItems?.Select(p => new PollItemDto()
+        {
+          PollContent = p.PollContent,
+          VoteCount = p.VoteCount,
+        }).ToList()
       };
     }
 }
