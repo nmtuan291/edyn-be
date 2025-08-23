@@ -1,5 +1,4 @@
 ﻿using ForumService.ForumService.Application;
-using ForumService.ForumService.Application.Interfaces.Repositories;
 using ForumService.ForumService.Application.Interfaces.UnitOfWork;
 using ForumService.ForumService.Domain.Entities;
 using Moq;

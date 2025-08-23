@@ -1,6 +1,6 @@
-﻿using ForumService.ForumService.Application.Interfaces.Repositories;
-using ForumService.ForumService.Domain.Entities;
+﻿using ForumService.ForumService.Domain.Entities;
 using ForumService.ForumService.Infrastructure.Data;
+using ForumService.ForumService.Infrastructure.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using Microsoft.Extensions.Caching.Distributed;

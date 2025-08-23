@@ -3,10 +3,10 @@ using ForumService.ForumService.Application.Interfaces.UnitOfWork;
 using ForumService.ForumService.Infrastructure.UnitOfWork;
 using ForumService.ForumService.API.Middlewares;
 using ForumService.ForumService.Application;
-using ForumService.ForumService.Application.Interfaces.Repositories;
 using ForumService.ForumService.Application.Interfaces.Services;
 using Microsoft.EntityFrameworkCore;
 using ForumService.ForumService.Infrastructure.Data;
+using ForumService.ForumService.Infrastructure.Interfaces;
 using ForumService.ForumService.Infrastructure.Repositories;
 using Microsoft.IdentityModel.Tokens;
 using StackExchange.Redis;
@@ -26,7 +26,7 @@ builder.Services.AddDbContext<ForumDbContext>(options => options.UseNpgsql(build
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IForumThreadService, ForumThreadService>();
 builder.Services.AddScoped<IForumService, ForumService.ForumService.Application.ForumService>();
-builder.Services.AddScoped<IForumThreadRepository, ForumThreadRepository>();
+builder.Services.AddScoped<IThreadRepository, ThreadRepository>();
 builder.Services.AddScoped<IForumRepository, ForumRepository>();
 builder.Services.AddScoped<ICommentNotificationSender, CommentNotificationSender>();
 
@@ -43,9 +43,12 @@ builder.Services.AddAuthentication(options =>
             ValidIssuer = "http://localhost:5299",
             ValidateAudience = false,
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("fmcE8xVOt3k0CgmfCyuVEkFAZxnQbql5")), // For testing, the key will be removed later
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Secret_key"]))
         };
     });
+
+// AutoMapper
+builder.Services.AddAutoMapper(cfg => {}, typeof(Program));
 
 // Redis
 builder.Services.AddSingleton<IConnectionMultiplexer>(sp => 

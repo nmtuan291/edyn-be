@@ -1,4 +1,5 @@
-﻿using ForumService.ForumService.Application.DTOs;
+﻿using AutoMapper;
+using ForumService.ForumService.Application.DTOs;
 using ForumService.ForumService.Application.Enums;
 using ForumService.ForumService.Application.Interfaces.UnitOfWork;
 using ForumService.ForumService.Domain.Entities;
@@ -13,119 +14,75 @@ namespace ForumService.ForumService.Application;
   {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICommentNotificationSender _commentNotificationSender;
+    private readonly IMapper _mapper;
 
-    public ForumThreadService(IUnitOfWork unitOfWork, ICommentNotificationSender commentNotificationSender)
+    public ForumThreadService(IUnitOfWork unitOfWork, ICommentNotificationSender commentNotificationSender, IMapper mapper)
     {
       _unitOfWork = unitOfWork;
       _commentNotificationSender = commentNotificationSender;
+      _mapper =  mapper;
     }
 
     public async Task<List<ForumThreadDto>> GetThreadsByForumId(Guid forumId, string? userId, int pageNumber, int pageSize, 
       SortBy sortBy = SortBy.Hot, SortDate sortDate = SortDate.All)
     {
-      var threads = await _unitOfWork.ForumThreads.GetThreadsByForumIdAsync(forumId, sortBy, 
+      var threads = await _unitOfWork.ThreadRepo.GetThreadsByForumIdAsync(forumId, sortBy, 
         sortDate, pageNumber, pageSize);
 
       var votedThreads = string.IsNullOrEmpty(userId)
         ? new Dictionary<Guid, bool>()
-        : await _unitOfWork.ForumThreads.GetVotedThreadsAsync(Guid.Parse(userId), forumId);;
-      
-      return threads.Select(t => new ForumThreadDto()
-      {
-        Id = t.Id,
-        CreatedAt = t.CreatedAt,
-        Content = t.Content,
-        CreatorId = t.CreatorId,
-        ForumId = t.ForumId,
-        Images = t.Images,
-        IsPinned = t.IsPinned,
-        LastUpdatedAt = t.LastUpdatedAt,
-        Slug = t.Slug,
-        Tags = t.Tags,
-        Upvote = t.Upvote,
-        Title = t.Title,
-        Vote = !string.IsNullOrEmpty(userId) 
-          ? votedThreads.TryGetValue(t.Id, out var v) ? (v ? "down" : "up") : "none"
-          : "none",
-        PollItems = t.PollItems?.Select(p => new PollItemDto()
+        : await _unitOfWork.VoteRepo.GetVotedThreadsAsync(Guid.Parse(userId), forumId);;
+
+      return _mapper.Map<List<ForumThreadDto>>(threads)
+        .Select(dto =>
         {
-          PollContent = p.PollContent,
-          VoteCount = p.VoteCount,
-        }).ToList()
-      }).ToList();
+          if (!string.IsNullOrEmpty(userId))
+          {
+            dto.Vote = votedThreads.TryGetValue(dto.Id!.Value, out var v) ? (v ? "down" : "up") : "none";
+          }
+          else
+          {
+            dto.Vote = "none";
+          }
+          return dto;
+        })
+        .ToList();
     }
-    
-    private List<CommentDto> MapCommentsToDto(IEnumerable<Comment> comments)
-    {
-      return comments.Select(c => new CommentDto
-      {
-        Id = c.Id,
-        ThreadId = c.ThreadId,
-        OwnerId = c.OwnerId,
-        OwnerName = c.OwnerName,
-        Content = c.Content,
-        Upvote = c.Upvote,
-        CreatedAt = c.CreatedAt,
-        ParentId = c.ParentId,
-        ChildrenComments = c.ChildrenComments != null
-          ? MapCommentsToDto(c.ChildrenComments)
-          : new List<CommentDto>(),
-        UpdatedAt = c.UpdatedAt,
-        Deleted = c.Deleted
-      }).ToList();
-    }
-    
 
     public async Task<List<CommentDto>> GetCommentsByThreadId(Guid threadId)
     {
       if (threadId == Guid.Empty)
-      {
         throw new ArgumentNullException(nameof(threadId));
-      }
 
-      var comments = await _unitOfWork.ForumThreads.GetCommentByThreadIdAsync(threadId);
+      var comments = await _unitOfWork.CommentRepo.GetCommentByThreadIdAsync(threadId);
 
-      return MapCommentsToDto(comments);
+      return _mapper.Map<List<CommentDto>>(comments);
     }
 
     public async Task InsertComment(CommentDto comment, Guid userId, string ownerName)
     {
       if (comment.ThreadId == Guid.Empty)
-      {
         throw new ArgumentException("Thread Id cannot be empty", nameof(comment));
-      }
 
-      var cmt = new Comment
-      {
-        Id = Guid.NewGuid(),
-        ThreadId = comment.ThreadId,
-        OwnerId = userId,
-        OwnerName = ownerName,
-        Content = comment.Content,
-        Upvote = comment.Upvote,
-        ParentId = comment.ParentId,
-        ChildrenComments = new List<Comment>(),
-        UpdatedAt = comment.UpdatedAt,
-        CreatedAt = DateTime.UtcNow,
-        Deleted = comment.Deleted,
-      };
+      var cmt = new Comment(comment.ThreadId, userId, ownerName, comment.Content, comment.ParentId ?? Guid.Empty);
 
-      await _unitOfWork.ForumThreads.InsertCommentAsync(cmt);
+      await _unitOfWork.CommentRepo.InsertCommentAsync(cmt);
       await _unitOfWork.CommitAsync();
-      var parentComment = await _unitOfWork.ForumThreads.GetParentCommentAsync(cmt.ParentId ?? Guid.Empty);
+      
+      var parentComment = await _unitOfWork.CommentRepo.GetParentCommentAsync(cmt.ParentId ?? Guid.Empty);
       await _commentNotificationSender.SendNotification(parentComment?.OwnerId.ToString() ?? "", 
         parentComment?.OwnerName ?? "",parentComment?.Content ?? "", parentComment?.ThreadId.ToString() ?? "");
     }
 
     public async Task DeleteComment(Guid commentId)
     {
-      await _unitOfWork.ForumThreads.DeleteCommentById(commentId);
+      await _unitOfWork.CommentRepo.DeleteCommentById(commentId);
       await _unitOfWork.CommitAsync();
     }
 
     public async Task DeleteThread(Guid threadId)
     {
-      await _unitOfWork.ForumThreads.DeleteThreadByIdAsync(threadId);
+      await _unitOfWork.ThreadRepo.DeleteThreadByIdAsync(threadId);
       await _unitOfWork.CommitAsync();
     }
 
@@ -152,36 +109,17 @@ namespace ForumService.ForumService.Application;
         Slug = forumThread.Slug,
       };
       
-      await _unitOfWork.ForumThreads.InsertThreadAsync(newThread);
+      await _unitOfWork.ThreadRepo.InsertThreadAsync(newThread);
       await _unitOfWork.CommitAsync();
     }
 
     public async Task<ForumThreadDto?> GetThreadById(Guid threadId)
     {
-      var thread = await _unitOfWork.ForumThreads.GetThreadByIdAsync(threadId);
+      var thread = await _unitOfWork.ThreadRepo.GetThreadByIdAsync(threadId);
       if (thread == null)
         return null;
       
-      return new ForumThreadDto()
-      {
-        Id = thread.Id,
-        CreatedAt = thread.CreatedAt,
-        Content = thread.Content,
-        CreatorId = thread.CreatorId,
-        ForumId = thread.ForumId,
-        Images = thread.Images,
-        IsPinned = thread.IsPinned,
-        LastUpdatedAt = thread.LastUpdatedAt,
-        Slug = thread.Slug,
-        Tags = thread.Tags,
-        Upvote = thread.Upvote,
-        Title = thread.Title,
-        PollItems = thread.PollItems?.Select(p => new PollItemDto()
-        {
-          PollContent = p.PollContent,
-          VoteCount = p.VoteCount,
-        }).ToList(),
-      };
+      return _mapper.Map<ForumThreadDto>(thread);
     }
     
     /*public async Task<List<ForumThreadDto>> GetThreadsByJoinForums(Guid userId, int page = 0, int pageSize = 10)
@@ -195,69 +133,17 @@ namespace ForumService.ForumService.Application;
         // TODO
       }
     }*/
-
+    
     public async Task<ForumThreadDto?> UpdateThreadVote(Guid threadId, Guid userId, bool isDownVote = false)
     {
-      var thread = await _unitOfWork.ForumThreads.GetThreadByIdAsync(threadId);
+      var thread = await _unitOfWork.ThreadRepo.GetThreadByIdAsync(threadId);
       if (thread == null)
         return null;
       
-      var vote = await _unitOfWork.ForumThreads.GetThreadVoteAsync(threadId, userId);
-      if (vote == null)
-      {
-        Console.WriteLine($"Thread vote {threadId} not found, create new vote");
-        vote = new ThreadVote()
-        {
-          ThreadId = thread.Id,
-          UserId = userId,
-          DownVote = isDownVote,
-        };
-        await _unitOfWork.ForumThreads.AddThreadVoteAsync(vote, thread.ForumId);
-        Console.WriteLine("Prepare to add new vote");
-        
-      }
-      else
-      {
-        if (isDownVote == vote.DownVote)
-        {
-          await _unitOfWork.ForumThreads.DeleteThreadVote(vote, thread.ForumId);
-        }
-        else
-        {
-          vote.DownVote = isDownVote;
-          await _unitOfWork.ForumThreads.UpdateThreadVote(vote, thread.ForumId);
-        }
-      }
-      await _unitOfWork.CommitAsync();
-      Console.WriteLine("Committed vote");
-      
-      
-      thread.Upvote = await _unitOfWork.ForumThreads.CountUpvotesAsync(thread.Id);
-      Console.WriteLine($"Thread upvote: {thread.Upvote}");
-      _unitOfWork.ForumThreads.UpdateThread(thread);
-      
+      thread.Vote(userId, isDownVote);
       await _unitOfWork.CommitAsync();
       
-      return new ForumThreadDto()
-      {
-        Id = thread.Id,
-        CreatedAt = thread.CreatedAt,
-        Content = thread.Content,
-        CreatorId = thread.CreatorId,
-        ForumId = thread.ForumId,
-        Images = thread.Images,
-        IsPinned = thread.IsPinned,
-        LastUpdatedAt = thread.LastUpdatedAt,
-        Slug = thread.Slug,
-        Tags = thread.Tags,
-        Upvote = thread.Upvote,
-        Title = thread.Title,
-        PollItems = thread.PollItems?.Select(p => new PollItemDto()
-        {
-          PollContent = p.PollContent,
-          VoteCount = p.VoteCount,
-        }).ToList()
-      };
+      return _mapper.Map<ForumThreadDto>(thread);
     }
 }
 

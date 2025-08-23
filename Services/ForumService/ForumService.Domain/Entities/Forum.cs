@@ -25,5 +25,10 @@ namespace ForumService.ForumService.Domain.Entities
 
         [Required]
         public DateTime CreatedAt { get; set; }
+
+        public Forum()
+        {
+            
+        }
     }
 }

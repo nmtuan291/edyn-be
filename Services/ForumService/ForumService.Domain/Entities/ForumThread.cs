@@ -45,5 +45,33 @@ namespace ForumService.ForumService.Domain.Entities
 
         [Required]
         public DateTime LastUpdatedAt { get; set; }
+        
+        public ICollection<ThreadVote> Votes { get; set; }
+        
+        public void Vote(Guid userId, bool isDownVote = false)
+        {
+            var vote = Votes.FirstOrDefault(x => x.UserId == userId);
+            if (vote == null)
+            {
+                vote = new ThreadVote()
+                {
+                    ThreadId = Id,
+                    UserId = userId,
+                    DownVote = isDownVote,
+                };
+                Votes.Add(vote);
+            }
+            else
+            {
+                if (isDownVote == vote.DownVote)
+                    Votes.Remove(vote);
+                else
+                    vote.DownVote = isDownVote;
+            }
+
+            int upVote = Votes.Count(v => !v.DownVote);
+            int downVote = Votes.Count(v => v.DownVote);
+            Upvote = upVote -  downVote;
+        }
     }
 }

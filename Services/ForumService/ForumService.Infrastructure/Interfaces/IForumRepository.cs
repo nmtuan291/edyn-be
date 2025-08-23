@@ -1,7 +1,7 @@
 ﻿using ForumService.ForumService.Application.DTOs;
 using ForumService.ForumService.Domain.Entities;
 
-namespace ForumService.ForumService.Application.Interfaces.Repositories
+namespace ForumService.ForumService.Infrastructure.Interfaces
 {
     public interface IForumRepository
     {

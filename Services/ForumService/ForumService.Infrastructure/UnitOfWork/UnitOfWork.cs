@@ -1,6 +1,6 @@
-﻿using ForumService.ForumService.Application.Interfaces.Repositories;
-using ForumService.ForumService.Application.Interfaces.UnitOfWork;
+﻿using ForumService.ForumService.Application.Interfaces.UnitOfWork;
 using ForumService.ForumService.Infrastructure.Data;
+using ForumService.ForumService.Infrastructure.Interfaces;
 using ForumService.ForumService.Infrastructure.Repositories;
 using StackExchange.Redis;
 
@@ -12,15 +12,19 @@ namespace ForumService.ForumService.Infrastructure.UnitOfWork
         private readonly ForumDbContext _context;
         private readonly IConnectionMultiplexer _redis;
 
-        public IForumThreadRepository ForumThreads { get; }
-        public IForumRepository Forums { get; }
+        public IThreadRepository ThreadRepo { get; }
+        public IForumRepository ForumRepo { get; }
+        public IVoteRepository VoteRepo { get; }
+        public ICommentRepository CommentRepo { get; }
         
         public UnitOfWork(ForumDbContext context, IConnectionMultiplexer redis)
         {
             _context = context;
             _redis = redis;
-            ForumThreads = new ForumThreadRepository(_context, _redis);
-            Forums = new ForumRepository(_context, _redis);
+            ThreadRepo = new ThreadRepository(_context, _redis);
+            ForumRepo = new ForumRepository(_context, _redis);
+            VoteRepo = new VoteRepository(_context, _redis);
+            CommentRepo = new CommentRepository(_context);
         }
 
         public async Task<int> CommitAsync()
