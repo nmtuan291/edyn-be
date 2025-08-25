@@ -1,6 +1,7 @@
-﻿using ForumService.ForumService.Application.Interfaces.UnitOfWork;
+﻿using AutoMapper;
+using ForumService.ForumService.Application.Interfaces.Repositories;
+using ForumService.ForumService.Application.Interfaces.UnitOfWork;
 using ForumService.ForumService.Infrastructure.Data;
-using ForumService.ForumService.Infrastructure.Interfaces;
 using ForumService.ForumService.Infrastructure.Repositories;
 using StackExchange.Redis;
 
@@ -17,14 +18,14 @@ namespace ForumService.ForumService.Infrastructure.UnitOfWork
         public IVoteRepository VoteRepo { get; }
         public ICommentRepository CommentRepo { get; }
         
-        public UnitOfWork(ForumDbContext context, IConnectionMultiplexer redis)
+        public UnitOfWork(ForumDbContext context, IConnectionMultiplexer redis, IMapper mapper)
         {
             _context = context;
             _redis = redis;
-            ThreadRepo = new ThreadRepository(_context, _redis);
-            ForumRepo = new ForumRepository(_context, _redis);
-            VoteRepo = new VoteRepository(_context, _redis);
-            CommentRepo = new CommentRepository(_context);
+            ThreadRepo = new ThreadRepository(_context, _redis, mapper);
+            ForumRepo = new ForumRepository(_context, _redis, mapper);
+            VoteRepo = new VoteRepository(_context, _redis, mapper);
+            CommentRepo = new CommentRepository(_context, mapper);
         }
 
         public async Task<int> CommitAsync()

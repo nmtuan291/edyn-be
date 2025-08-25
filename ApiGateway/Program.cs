@@ -19,7 +19,6 @@ builder.Services.AddAuthentication("Bearer")
         {
             ValidateAudience = false,
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("fmcE8xVOt3k0CgmfCyuVEkFAZxnQbql5")),
             ValidIssuer = "http://localhost:5299" 
         };
     });

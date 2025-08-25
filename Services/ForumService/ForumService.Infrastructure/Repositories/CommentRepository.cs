@@ -1,6 +1,8 @@
+using AutoMapper;
+using ForumService.ForumService.Application.Interfaces.Repositories;
 using ForumService.ForumService.Domain.Entities;
 using ForumService.ForumService.Infrastructure.Data;
-using ForumService.ForumService.Infrastructure.Interfaces;
+using ForumService.ForumService.Infrastructure.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace ForumService.ForumService.Infrastructure.Repositories;
@@ -8,10 +10,12 @@ namespace ForumService.ForumService.Infrastructure.Repositories;
 public class CommentRepository : ICommentRepository
 {
     private readonly ForumDbContext _context;
+    private readonly IMapper _mapper;
 
-    public CommentRepository(ForumDbContext context)
+    public CommentRepository(ForumDbContext context, IMapper mapper)
     {
         _context = context;
+        _mapper = mapper;
     }
     
     public async Task<List<Comment>> GetCommentByThreadIdAsync(Guid threadId)
@@ -26,18 +30,20 @@ public class CommentRepository : ICommentRepository
             if (comment.ParentId != null && commentDict.TryGetValue(comment.ParentId.Value, out var parentComment))
             {
                 if (parentComment.ChildrenComments == null) 
-                    parentComment.ChildrenComments = new List<Comment>();
+                    parentComment.ChildrenComments = new List<CommentEf>();
                     
                 parentComment.ChildrenComments.Add(comment);
             }
         }
-            
-        return allComments.Where(comment => comment.ParentId == null).ToList();
+        allComments = allComments.Where(comment => comment.ParentId == null).ToList();
+        
+        return _mapper.Map<List<Comment>>(allComments);
     }
     
     public async Task InsertCommentAsync(Comment comment)
     {
-        await _context.Comments.AddAsync(comment);
+        CommentEf commentEf = _mapper.Map<CommentEf>(comment);
+        await _context.Comments.AddAsync(commentEf);
     }
     
     public async Task DeleteCommentById(Guid commentId)
@@ -49,8 +55,10 @@ public class CommentRepository : ICommentRepository
 
     public async Task<Comment?> GetParentCommentAsync(Guid commentId)
     {
-        return await _context.Comments
+        var comment = await _context.Comments
             .Where(c => c.Id == commentId)
             .SingleOrDefaultAsync();
+        
+        return _mapper.Map<Comment>(comment);
     }
 }

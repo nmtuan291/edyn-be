@@ -1,9 +1,11 @@
-﻿using ForumService.ForumService.Domain.Entities;
+﻿using AutoMapper;
+using ForumService.ForumService.Domain.Entities;
 using ForumService.ForumService.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using ForumService.ForumService.Application.DTOs;
 using ForumService.ForumService.Application.Enums;
-using ForumService.ForumService.Infrastructure.Interfaces;
+using ForumService.ForumService.Application.Interfaces.Repositories;
+using ForumService.ForumService.Infrastructure.Models;
 using StackExchange.Redis;
 
 namespace ForumService.ForumService.Infrastructure.Repositories
@@ -12,11 +14,13 @@ namespace ForumService.ForumService.Infrastructure.Repositories
     {
         private readonly ForumDbContext _context;
         private readonly IDatabase _redis;
+        private readonly IMapper _mapper;
 
-        public ThreadRepository(ForumDbContext context, IConnectionMultiplexer redis)
+        public ThreadRepository(ForumDbContext context, IConnectionMultiplexer redis, IMapper mapper)
         {
             _context = context;
             _redis = redis.GetDatabase();
+            _mapper = mapper;
         }
 
         public async Task<List<ForumThread>> GetThreadsByForumIdAsync(Guid forumId, SortBy sortBy, 
@@ -50,14 +54,17 @@ namespace ForumService.ForumService.Infrastructure.Repositories
                 .Take(pageSize);
             
             
-            return await threads
+            var threadList = await threads
                 .Include(t => t.PollItems)
                 .ToListAsync();
+            
+            return _mapper.Map<List<ForumThread>>(threadList);
         }
 
         public async Task InsertThreadAsync(ForumThread thread)
         {
-            await _context.Threads.AddAsync(thread);
+            ForumThreadEf forumThreadEf = _mapper.Map<ForumThreadEf>(thread);
+            await _context.Threads.AddAsync(forumThreadEf);
         }
 
         public async Task DeleteThreadByIdAsync(Guid threadId)
@@ -69,15 +76,18 @@ namespace ForumService.ForumService.Infrastructure.Repositories
 
         public async Task<ForumThread?> GetThreadByIdAsync(Guid threadId)
         {
-            return await _context.Threads
+            var thread = await _context.Threads
                 .Include(t => t.PollItems)
                 .Include(t => t.Votes)
                 .SingleOrDefaultAsync(t => t.Id == threadId);
+            
+            return _mapper.Map<ForumThread>(thread);
         }
         
         public void UpdateThread(ForumThread thread)
         {
-            _context.Threads.Update(thread);
+            ForumThreadEf forumThreadEf = _mapper.Map<ForumThreadEf>(thread);
+            _context.Threads.Update(forumThreadEf);
         }
     }
 }

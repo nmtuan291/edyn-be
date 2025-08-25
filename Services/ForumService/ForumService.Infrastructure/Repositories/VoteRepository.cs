@@ -1,6 +1,8 @@
+using AutoMapper;
+using ForumService.ForumService.Application.Interfaces.Repositories;
 using ForumService.ForumService.Domain.Entities;
 using ForumService.ForumService.Infrastructure.Data;
-using ForumService.ForumService.Infrastructure.Interfaces;
+using ForumService.ForumService.Infrastructure.Models;
 using Microsoft.EntityFrameworkCore;
 using StackExchange.Redis;
 
@@ -10,37 +12,44 @@ public class VoteRepository : IVoteRepository
 {
     private readonly ForumDbContext _context;
     private readonly IDatabase _redis;
+    private readonly IMapper _mapper;
 
-    public VoteRepository(ForumDbContext dbContext, IConnectionMultiplexer redis)
+    public VoteRepository(ForumDbContext dbContext, IConnectionMultiplexer redis, IMapper mapper)
     {
         _context = dbContext;
         _redis = redis.GetDatabase();
+        _mapper = mapper;
     }
     
     public async Task AddThreadVoteAsync(ThreadVote vote, Guid forumId)
     {
-        await _context.ThreadVotes.AddAsync(vote);
+        ThreadVoteEf threadVoteEf = _mapper.Map<ThreadVoteEf>(vote); 
+        await _context.ThreadVotes.AddAsync(threadVoteEf);
         await _redis.HashSetAsync($"vote:{vote.UserId}:{forumId}", 
             vote.ThreadId.ToString(), vote.DownVote);
     }
 
     public async Task DeleteThreadVote(ThreadVote vote, Guid forumId)
     {
-        _context.ThreadVotes.Remove(vote);
+        ThreadVoteEf threadVoteEf = _mapper.Map<ThreadVoteEf>(vote);
+        _context.ThreadVotes.Remove(threadVoteEf);
         await _redis.HashDeleteAsync($"vote:{vote.UserId}:{forumId}", vote.ThreadId.ToString());
     }
 
     public async Task UpdateThreadVote(ThreadVote vote, Guid forumId)
     {
-        _context.ThreadVotes.Update(vote);
+        ThreadVoteEf threadVoteEf = _mapper.Map<ThreadVoteEf>(vote);
+        _context.ThreadVotes.Update(threadVoteEf);
         await _redis.HashSetAsync($"vote:{vote.UserId}:{forumId}", 
             vote.ThreadId.ToString(), vote.DownVote);
     }
 
     public async Task<ThreadVote?> GetThreadVoteAsync(Guid threadId, Guid userId)
     {
-        return await _context.ThreadVotes
+        var threadvote = await _context.ThreadVotes
             .SingleOrDefaultAsync(t => t.ThreadId == threadId && t.UserId == userId);
+        
+        return _mapper.Map<ThreadVote>(threadvote);
     }
 
     public async Task<int> CountUpvotesAsync(Guid threadId)

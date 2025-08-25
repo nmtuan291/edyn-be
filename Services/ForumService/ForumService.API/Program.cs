@@ -3,10 +3,10 @@ using ForumService.ForumService.Application.Interfaces.UnitOfWork;
 using ForumService.ForumService.Infrastructure.UnitOfWork;
 using ForumService.ForumService.API.Middlewares;
 using ForumService.ForumService.Application;
+using ForumService.ForumService.Application.Interfaces.Repositories;
 using ForumService.ForumService.Application.Interfaces.Services;
 using Microsoft.EntityFrameworkCore;
 using ForumService.ForumService.Infrastructure.Data;
-using ForumService.ForumService.Infrastructure.Interfaces;
 using ForumService.ForumService.Infrastructure.Repositories;
 using Microsoft.IdentityModel.Tokens;
 using StackExchange.Redis;
@@ -30,6 +30,7 @@ builder.Services.AddScoped<IThreadRepository, ThreadRepository>();
 builder.Services.AddScoped<IForumRepository, ForumRepository>();
 builder.Services.AddScoped<ICommentNotificationSender, CommentNotificationSender>();
 
+/*
 builder.Services.AddAuthentication(options =>
     {
         options.DefaultAuthenticateScheme = "Bearer";
@@ -45,6 +46,15 @@ builder.Services.AddAuthentication(options =>
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Secret_key"]))
         };
+    });
+    */
+
+builder.Services.AddAuthentication("Bearer")
+    .AddJwtBearer("Bearer", options =>
+    {
+        options.Authority = "http://localhost:5299";  
+        options.Audience = "orders-api";
+        options.RequireHttpsMetadata = true; 
     });
 
 // AutoMapper

@@ -1,6 +1,8 @@
-﻿using ForumService.ForumService.Domain.Entities;
+﻿using AutoMapper;
+using ForumService.ForumService.Application.Interfaces.Repositories;
+using ForumService.ForumService.Domain.Entities;
 using ForumService.ForumService.Infrastructure.Data;
-using ForumService.ForumService.Infrastructure.Interfaces;
+using ForumService.ForumService.Infrastructure.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using Microsoft.Extensions.Caching.Distributed;
@@ -12,30 +14,37 @@ namespace ForumService.ForumService.Infrastructure.Repositories
     {
         private readonly ForumDbContext _context;
         private readonly IDatabase _redis;
+        private readonly IMapper _mapper;
 
-        public ForumRepository(ForumDbContext context, IConnectionMultiplexer redis)
+        public ForumRepository(ForumDbContext context, IConnectionMultiplexer redis, IMapper mapper)
         {
             _context = context;
             _redis = redis.GetDatabase();
+            _mapper = mapper;
         }
 
         public async Task<Forum?> GetForumByIdAsync(Guid forumId)
         {
-            return await _context.Forums
+            var forum = await _context.Forums
                 .Where(f => f.Id == forumId)
                 .SingleOrDefaultAsync();
+            
+            return _mapper.Map<Forum>(forum);
         }
 
         public async Task<Forum?> GetForumByNameAsync(string name)
         {
-            return await _context.Forums
+            var forum = await _context.Forums
                 .Where(f => f.Name == name) 
                 .SingleOrDefaultAsync();
+            
+            return _mapper.Map<Forum>(forum);
         }
         
         public async Task<List<Forum>> GetForumsAsync()
         {
-            return await _context.Forums.ToListAsync();
+            var forums = await _context.Forums.ToListAsync();
+            return _mapper.Map<List<Forum>>(forums);
         }
         
         public async Task<Forum?> InsertForumAsync(Forum forum)
@@ -44,13 +53,14 @@ namespace ForumService.ForumService.Infrastructure.Repositories
             if (existsForum != null)
                 return null;
             
-            await _context.Forums.AddAsync(forum);
+            ForumEf forumEf = _mapper.Map<ForumEf>(forum);
+            await _context.Forums.AddAsync(forumEf);
             return forum;
         }
 
         public async Task InsertUserToForumAsync(Guid forumId, Guid userId, string permissions, bool isModerator)
         {
-            await _context.ForumUsers.AddAsync(new ForumUser
+            await _context.ForumUsers.AddAsync(new ForumUserEf
             {
                 ForumId = forumId, 
                 UserId = userId,
@@ -70,9 +80,10 @@ namespace ForumService.ForumService.Infrastructure.Repositories
         {
             var forums = await _context.ForumUsers
                 .Where(f => f.UserId == userId)
-                .Include(f => f.Forum)
+                .Include(f => f.ForumEf)
                 .ToListAsync();
-            return forums;
+            
+            return _mapper.Map<List<ForumUser>>(forums);
         }
     }
 }

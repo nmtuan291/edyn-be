@@ -38,6 +38,7 @@
 
   <ItemGroup>
     <Folder Include="ForumService.API\Grpc\" />
+    <Folder Include="ForumService.Infrastructure\Interfaces\" />
   </ItemGroup>
 
   <ItemGroup>

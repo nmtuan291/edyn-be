@@ -1,4 +1,4 @@
-﻿using ForumService.ForumService.Infrastructure.Interfaces;
+﻿using ForumService.ForumService.Application.Interfaces.Repositories;
 
 namespace ForumService.ForumService.Application.Interfaces.UnitOfWork
 {

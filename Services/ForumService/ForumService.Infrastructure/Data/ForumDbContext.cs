@@ -1,4 +1,5 @@
 ﻿using ForumService.ForumService.Domain.Entities;
+using ForumService.ForumService.Infrastructure.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace ForumService.ForumService.Infrastructure.Data
@@ -11,26 +12,26 @@ namespace ForumService.ForumService.Infrastructure.Data
         {
             base.OnModelCreating(modelBuilder);
             
-            modelBuilder.Entity<CommentVote>()
+            modelBuilder.Entity<CommentVoteEf>()
                 .HasKey(v => new { v.UserId, v.ComentId });
-            modelBuilder.Entity<ThreadVote>()
+            modelBuilder.Entity<ThreadVoteEf>()
                 .HasKey(v => new { v.UserId, v.ThreadId });
 
-            modelBuilder.Entity<ForumUser>()
+            modelBuilder.Entity<ForumUserEf>()
                 .HasKey(t => new { t.UserId, t.ForumId });
-            modelBuilder.Entity<Poll>()
+            modelBuilder.Entity<PollEf>()
                 .HasKey(p => new { p.ThreadId, p.PollContent });
-            modelBuilder.Entity<Forum>()
+            modelBuilder.Entity<ForumEf>()
                 .HasIndex(f => f.Name)
                 .IsUnique();
         }
 
-        public DbSet<Forum> Forums { get; set; }
-        public DbSet<ForumThread> Threads { get; set; }
-        public DbSet<Comment> Comments { get; set; }
-        public DbSet<Tag> Tags { get; set; }
-        public DbSet<ForumUser> ForumUsers { get; set; }
-        public DbSet<ThreadVote> ThreadVotes { get; set; }
-        public DbSet<CommentVote> CommentVotes { get; set; }
+        public DbSet<ForumEf> Forums { get; set; }
+        public DbSet<ForumThreadEf> Threads { get; set; }
+        public DbSet<CommentEf> Comments { get; set; }
+        public DbSet<TagEf> Tags { get; set; }
+        public DbSet<ForumUserEf> ForumUsers { get; set; }
+        public DbSet<ThreadVoteEf> ThreadVotes { get; set; }
+        public DbSet<CommentVoteEf> CommentVotes { get; set; }
     }
 }
