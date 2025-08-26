@@ -20,8 +20,9 @@ namespace ForumService.ForumService.Domain.Entities
         public DateTime LastUpdatedAt { get; set; }
         public ICollection<ThreadVote> Votes { get; set; }
         
-        public void Vote(Guid userId, bool isDownVote = false)
+        public bool Vote(Guid userId, bool isDownVote)
         {
+            bool voteExists = false;
             var vote = Votes.FirstOrDefault(x => x.UserId == userId);
             if (vote == null)
             {
@@ -32,18 +33,26 @@ namespace ForumService.ForumService.Domain.Entities
                     DownVote = isDownVote,
                 };
                 Votes.Add(vote);
+                voteExists = true;
             }
             else
             {
                 if (isDownVote == vote.DownVote)
+                {
                     Votes.Remove(vote);
+                }
                 else
+                {
                     vote.DownVote = isDownVote;
+                    voteExists = true;
+                }
             }
 
             int upVote = Votes.Count(v => !v.DownVote);
             int downVote = Votes.Count(v => v.DownVote);
             Upvote = upVote -  downVote;
+            
+            return voteExists;
         }
     }
 }

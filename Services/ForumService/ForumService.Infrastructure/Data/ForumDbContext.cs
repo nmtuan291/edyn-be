@@ -10,8 +10,6 @@ namespace ForumService.ForumService.Infrastructure.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            base.OnModelCreating(modelBuilder);
-            
             modelBuilder.Entity<CommentVoteEf>()
                 .HasKey(v => new { v.UserId, v.ComentId });
             modelBuilder.Entity<ThreadVoteEf>()
@@ -24,6 +22,10 @@ namespace ForumService.ForumService.Infrastructure.Data
             modelBuilder.Entity<ForumEf>()
                 .HasIndex(f => f.Name)
                 .IsUnique();
+            
+            modelBuilder.Entity<PollEf>().ToTable("Poll");
+            
+            base.OnModelCreating(modelBuilder);
         }
 
         public DbSet<ForumEf> Forums { get; set; }

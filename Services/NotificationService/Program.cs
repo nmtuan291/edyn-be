@@ -28,6 +28,7 @@ builder.Services.AddCors(options =>
     });
 });
 
+/*
 builder.Services.AddAuthentication(options =>
     {
         options.DefaultAuthenticateScheme = "Bearer";
@@ -59,7 +60,34 @@ builder.Services.AddAuthentication(options =>
             }
         };
     });
+    */
 
+
+builder.Services.AddAuthentication("Bearer")
+    .AddJwtBearer("Bearer", options =>
+    {
+        options.Authority = "http://localhost:5299"; 
+        options.RequireHttpsMetadata = false; 
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateAudience = true,
+            ValidAudience = "http://localhost:5057" 
+        };
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+                var path = context.HttpContext.Request.Path;
+                if (!string.IsNullOrEmpty(accessToken) &&
+                    path.StartsWithSegments("/hubs/notification"))
+                {
+                    context.Token = accessToken;
+                }
+                return Task.CompletedTask;
+            }
+        };
+    });
 // Redis
 builder.Services.AddSingleton<IConnectionMultiplexer>(sp => 
     ConnectionMultiplexer.Connect(builder.Configuration["Redis:ConnectionString"]));

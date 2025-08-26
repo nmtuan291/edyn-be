@@ -86,8 +86,12 @@ namespace ForumService.ForumService.Infrastructure.Repositories
         
         public void UpdateThread(ForumThread thread)
         {
-            ForumThreadEf forumThreadEf = _mapper.Map<ForumThreadEf>(thread);
-            _context.Threads.Update(forumThreadEf);
+            var ef = _context.Threads
+                .Include(t => t.PollItems)
+                .Include(t => t.Votes)
+                .First(t => t.Id == thread.Id);
+
+            _mapper.Map(thread, ef);
         }
     }
 }

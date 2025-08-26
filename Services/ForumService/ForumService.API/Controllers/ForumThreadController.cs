@@ -77,7 +77,11 @@ namespace ForumService.ForumService.API.Controllers
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized("Invalid user id");
-            
+
+            if (voteRequest.IsDownvote)
+            {
+                Console.WriteLine("THIS IS DOWNVOTE");
+            }
             return await _forumThreadService.UpdateThreadVote(voteRequest.ThreadId, 
                 Guid.Parse(userId), voteRequest.IsDownvote);
         }

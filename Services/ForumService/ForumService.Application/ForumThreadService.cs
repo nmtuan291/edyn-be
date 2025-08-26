@@ -38,11 +38,28 @@ namespace ForumService.ForumService.Application;
         {
           if (!string.IsNullOrEmpty(userId))
           {
-            dto.Vote = votedThreads.TryGetValue(dto.Id!.Value, out var v) ? (v ? "down" : "up") : "none";
+            if (votedThreads.TryGetValue(dto.Id!.Value, out var v))
+            {
+              if (v)
+              {
+                Console.WriteLine($"Vote for {dto.Id} is down");
+                dto.Vote = VoteStatus.DownVote;
+              }
+              else
+              {
+                Console.WriteLine($"Vote for {dto.Id} is up");
+                dto.Vote = VoteStatus.UpVote;
+              }
+            }
+            else
+            {
+              Console.WriteLine($"Vote for {dto.Id} is none");
+              dto.Vote = VoteStatus.NoVote;
+            }
           }
           else
           {
-            dto.Vote = "none";
+            dto.Vote = VoteStatus.NoVote;
           }
           return dto;
         })
@@ -134,13 +151,20 @@ namespace ForumService.ForumService.Application;
       }
     }*/
     
-    public async Task<ForumThreadDto?> UpdateThreadVote(Guid threadId, Guid userId, bool isDownVote = false)
+    public async Task<ForumThreadDto?> UpdateThreadVote(Guid threadId, Guid userId, bool isDownVote)
     {
       var thread = await _unitOfWork.ThreadRepo.GetThreadByIdAsync(threadId);
       if (thread == null)
         return null;
       
-      thread.Vote(userId, isDownVote);
+      bool isVoteExists = thread.Vote(userId, isDownVote);
+      _unitOfWork.ThreadRepo.UpdateThread(thread);
+      
+      if (isVoteExists)
+        await _unitOfWork.VoteRepo.UpdateThreadVoteRedisAsync(userId, threadId, thread.ForumId, isDownVote);
+      else
+        await _unitOfWork.VoteRepo.RemoveThreadVoteRedisAsync(userId, threadId, thread.ForumId);
+      
       await _unitOfWork.CommitAsync();
       
       return _mapper.Map<ForumThreadDto>(thread);

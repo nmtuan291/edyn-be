@@ -36,12 +36,18 @@ public class VoteRepository : IVoteRepository
         await _redis.HashDeleteAsync($"vote:{vote.UserId}:{forumId}", vote.ThreadId.ToString());
     }
 
-    public async Task UpdateThreadVote(ThreadVote vote, Guid forumId)
+    public async Task UpdateThreadVoteRedisAsync(Guid userId, Guid threadId, Guid forumId, bool downVote)
     {
-        ThreadVoteEf threadVoteEf = _mapper.Map<ThreadVoteEf>(vote);
-        _context.ThreadVotes.Update(threadVoteEf);
-        await _redis.HashSetAsync($"vote:{vote.UserId}:{forumId}", 
-            vote.ThreadId.ToString(), vote.DownVote);
+        /*ThreadVoteEf threadVoteEf = _mapper.Map<ThreadVoteEf>(vote);
+        _context.ThreadVotes.Update(threadVoteEf);*/
+        await _redis.HashSetAsync($"vote:{userId}:{forumId}", 
+            threadId.ToString(), downVote);
+    }
+    
+    public async Task RemoveThreadVoteRedisAsync(Guid userId, Guid threadId, Guid forumId)
+    {
+        await _redis.HashDeleteAsync($"vote:{userId}:{forumId}", 
+            threadId.ToString());
     }
 
     public async Task<ThreadVote?> GetThreadVoteAsync(Guid threadId, Guid userId)

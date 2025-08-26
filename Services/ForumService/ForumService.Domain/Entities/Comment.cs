@@ -25,8 +25,8 @@ namespace ForumService.ForumService.Domain.Entities
                 throw new ArgumentException("ThreadId cannot be empty");
             if (ownerId == Guid.Empty)
                 throw new ArgumentException("OwnerId cannot be empty");
-            if (string.IsNullOrEmpty(ownerName))
-                throw new ArgumentException("OwnerName cannot be empty");
+            /*if (string.IsNullOrEmpty(ownerName))
+                throw new ArgumentException("OwnerName cannot be empty");*/
             
             Id = Guid.NewGuid();
             ThreadId = threadId;

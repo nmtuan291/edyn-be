@@ -1,6 +1,7 @@
 ﻿using ForumService.ForumService.Domain.Entities;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
+using ForumService.ForumService.Application.Enums;
 
 namespace ForumService.ForumService.Application.DTOs
 {
@@ -19,6 +20,6 @@ namespace ForumService.ForumService.Application.DTOs
         public required int Upvote { get; set; }
         public  DateTime? CreatedAt { get; set; }
         public DateTime? LastUpdatedAt { get; set; }
-        public string Vote { get; set; }
+        public VoteStatus Vote { get; set; }
     }
 }

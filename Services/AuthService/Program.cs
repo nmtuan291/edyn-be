@@ -29,7 +29,7 @@ builder.Services.AddIdentity<Account, IdentityRole>()
 // Add dependency
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
-builder.Services.AddScoped<RsaKeyProvider, RsaKeyProvider>();
+builder.Services.AddSingleton<RsaKeyProvider>();
 
 builder.Services.AddGrpcClient<ProfileService.ProfileServiceClient>(option =>
 {

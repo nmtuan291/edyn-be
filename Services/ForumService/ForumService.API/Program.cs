@@ -30,31 +30,16 @@ builder.Services.AddScoped<IThreadRepository, ThreadRepository>();
 builder.Services.AddScoped<IForumRepository, ForumRepository>();
 builder.Services.AddScoped<ICommentNotificationSender, CommentNotificationSender>();
 
-/*
-builder.Services.AddAuthentication(options =>
-    {
-        options.DefaultAuthenticateScheme = "Bearer";
-        options.DefaultChallengeScheme = "Bearer";
-    })
-    .AddJwtBearer("Bearer", options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidIssuer = "http://localhost:5299",
-            ValidateAudience = false,
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Secret_key"]))
-        };
-    });
-    */
-
 builder.Services.AddAuthentication("Bearer")
     .AddJwtBearer("Bearer", options =>
     {
-        options.Authority = "http://localhost:5299";  
-        options.Audience = "orders-api";
-        options.RequireHttpsMetadata = true; 
+        options.Authority = "http://localhost:5299"; 
+        options.RequireHttpsMetadata = false; 
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateAudience = true,
+            ValidAudience = "http://localhost:5057" 
+        };
     });
 
 // AutoMapper
