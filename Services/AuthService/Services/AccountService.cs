@@ -1,8 +1,12 @@
+using System.Data;
 using AuthService.AuthService.Application.Dtos;
 using AuthService.Entities;
+using AuthService.Exceptions;
+using AuthService.Interfaces.Repositories;
 using AuthService.Interfaces.Services;
 using AuthService.Services.Sercurity;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using UserService.Grpc;
 
@@ -15,14 +19,19 @@ public class AccountService : IAccountService
     private readonly ITokenService _tokenService;
     private readonly ProfileService.ProfileServiceClient _profileService;
     private readonly RsaKeyProvider  _rsaKeyProvider;
+    private readonly IConfiguration _config;
+    private readonly ITokenRepository _tokenRepository;
     
     public AccountService(UserManager<Account> userManager, ITokenService tokenService, 
-        ProfileService.ProfileServiceClient profileService,  RsaKeyProvider rsaKeyProvider)
+        ProfileService.ProfileServiceClient profileService,  RsaKeyProvider rsaKeyProvider, IConfiguration config
+        , ITokenRepository tokenRepository)
     {
         _userManager = userManager;
         _tokenService = tokenService;
         _profileService = profileService;
         _rsaKeyProvider = rsaKeyProvider;
+        _config = config;
+        _tokenRepository = tokenRepository;
     }
     
     public async Task<LoginResponseDto?> Login(LoginAccountDto account)
@@ -38,14 +47,19 @@ public class AccountService : IAccountService
         if (!isPasswordValid)
             return null;
         
-        RsaSecurityKey privateKey = _rsaKeyProvider.GetPrivateKey("/home/tuan/RiderProjects/Keys/private.pem", "kid-2025-08-25-v1");
+        RsaSecurityKey privateKey = _rsaKeyProvider.GetPrivateKey(_config["Rsa:PrivateKeyDirectory"], _config["Rsa:Kid"]);
         string token = _tokenService.GenerateJwtToken(user.Id, user.Email, user.UserName, privateKey);
-
+        
+        RefreshToken newRefreshToken = Entities.RefreshToken.GenerateRefreshToken(user.Id, 14);
+        await _tokenRepository.SaveRefreshToken(newRefreshToken);
+        await _tokenRepository.SaveChangesAsync();
+        
         return new LoginResponseDto
         {
             Id = user.Id,
             Email = user.Email,
-            Token = token,
+            AccessToken = token,
+            RefreshToken = newRefreshToken.Token,
             UserName = user.UserName,
         };
     }
@@ -55,9 +69,7 @@ public class AccountService : IAccountService
         var account = await _userManager.FindByIdAsync(accountId);
 
         if (account == null)
-        {
             return null;
-        }
 
         return new AccountDto
         {
@@ -65,6 +77,34 @@ public class AccountService : IAccountService
             Email = account.Email ?? "",
             UserName = account.UserName ?? "",
             IsActive = true
+        };
+    }
+
+    public async Task<TokenResponse> RefreshToken(string accountId, string refreshToken)
+    {
+        var account = await _userManager.Users
+            .Include(u => u.RefreshTokens)
+            .SingleOrDefaultAsync(u => u.Id == accountId);
+        
+        if (account == null)
+            throw new RefreshTokenException("Account not found");
+        
+        var token = account.RefreshTokens.FirstOrDefault(t => t.Token == refreshToken);
+        if (token == null)
+            throw new RefreshTokenException("Refresh token not found");
+        
+        RefreshToken newRefreshToken = Entities.RefreshToken.GenerateRefreshToken(accountId, 14);
+        RsaSecurityKey privateKey = _rsaKeyProvider.GetPrivateKey(_config["Rsa:PrivateKeyDirectory"], _config["Rsa:Kid"]);
+        string newJwtToken = _tokenService.GenerateJwtToken(account.Id, account.Email, account.UserName, privateKey);
+        
+        if (token.ValidateToken(refreshToken))
+            token.UpdateRefreshToken(newRefreshToken);
+        await _tokenRepository.SaveChangesAsync();
+        
+        return new TokenResponse()
+        {
+            AccessToken = newJwtToken,
+            RefreshToken = newRefreshToken.Token,
         };
     }
 

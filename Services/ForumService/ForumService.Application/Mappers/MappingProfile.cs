@@ -14,7 +14,8 @@ public class MappingProfile : Profile
         CreateMap<ForumThread, ForumThreadDto>()
             .ForMember(dest => dest.Vote, opt => opt.Ignore());
         CreateMap<Poll, PollItemDto>();
-        CreateMap<Comment, CommentDto>();
+        CreateMap<Comment, CommentDto>()
+            .ForMember(dest => dest.Vote, opt => opt.Ignore());
         
         // Persistence models to domain entities
         CreateMap<CommentEf, Comment>();

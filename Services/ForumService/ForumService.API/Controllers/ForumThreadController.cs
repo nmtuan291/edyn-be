@@ -62,27 +62,37 @@ namespace ForumService.ForumService.API.Controllers
             await _forumThreadService.InsertComment(comment, Guid.Parse(userId), username);
             return Ok();
         }
-
+        
+        [AllowAnonymous]
         [HttpGet("{threadId}/comments")]
         public async Task<ActionResult<List<CommentDto>>> GetComments(Guid threadId)
         {
-            var commments = await _forumThreadService.GetCommentsByThreadId(threadId);
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var commments = await _forumThreadService.GetCommentsByThreadId(threadId, userId);
             return Ok(commments);
         }
         
         [Authorize]
         [HttpPost("thread/vote")]
-        public async Task<ActionResult<ForumThreadDto?>> Vote(VoteRequest voteRequest)
+        public async Task<ActionResult<ForumThreadDto?>> VoteThread(VoteRequest voteRequest)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userId))
-                return Unauthorized("Invalid user id");
+                return Unauthorized();
+            
+            return await _forumThreadService.UpdateThreadVote(voteRequest.Id, 
+                Guid.Parse(userId), voteRequest.IsDownvote);
+        }
 
-            if (voteRequest.IsDownvote)
-            {
-                Console.WriteLine("THIS IS DOWNVOTE");
-            }
-            return await _forumThreadService.UpdateThreadVote(voteRequest.ThreadId, 
+        [Authorize]
+        [HttpPost("comment/vote")]
+        public async Task<ActionResult<CommentDto?>> VoteComment(VoteRequest voteRequest)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+            
+            return await _forumThreadService.UpdateCommentVote(voteRequest.Id,
                 Guid.Parse(userId), voteRequest.IsDownvote);
         }
     }

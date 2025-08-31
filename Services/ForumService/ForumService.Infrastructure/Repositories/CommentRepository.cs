@@ -39,6 +39,14 @@ public class CommentRepository : ICommentRepository
         
         return _mapper.Map<List<Comment>>(allComments);
     }
+
+    public async Task<Comment?> GetCommentByIdAsync(Guid commentId)
+    {
+        var comment = await _context.Comments
+            .SingleOrDefaultAsync(c => c.Id == commentId);
+        
+        return _mapper.Map<Comment>(comment);
+    }
     
     public async Task InsertCommentAsync(Comment comment)
     {
@@ -60,5 +68,13 @@ public class CommentRepository : ICommentRepository
             .SingleOrDefaultAsync();
         
         return _mapper.Map<Comment>(comment);
+    }
+    
+    public async Task UpdateCommentAsync(Comment comment)
+    {
+        var ef = await _context.Comments
+            .FirstAsync(t => t.Id == comment.Id);
+
+        _mapper.Map(comment, ef);
     }
 }

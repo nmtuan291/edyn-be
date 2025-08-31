@@ -48,11 +48,9 @@ namespace ForumService.ForumService.Infrastructure.Repositories
             else if (sortBy == SortBy.Latest)
                 threads = threads.OrderByDescending(t => t.CreatedAt);
             
-            
             threads = threads
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize);
-            
             
             var threadList = await threads
                 .Include(t => t.PollItems)

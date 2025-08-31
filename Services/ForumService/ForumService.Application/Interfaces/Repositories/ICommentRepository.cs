@@ -8,4 +8,6 @@ public interface ICommentRepository
     Task InsertCommentAsync(Comment comment);
     Task DeleteCommentById(Guid commentId);
     Task<Comment?> GetParentCommentAsync(Guid commentId);
+    Task<Comment?> GetCommentByIdAsync(Guid commentId);
+    Task UpdateCommentAsync(Comment comment);
 }

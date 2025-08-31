@@ -1,6 +1,10 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using AuthService.AuthService.Application.Dtos;
 using AuthService.Interfaces.Services;
+using AuthService.Services.Sercurity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 
 namespace AuthService.AuthService.API.Controllers;
 
@@ -9,10 +13,14 @@ namespace AuthService.AuthService.API.Controllers;
 public class AccountController : ControllerBase
 {
     private readonly IAccountService _accountService;
+    private readonly RsaKeyProvider _rsaKeyProvider;
+    private readonly IConfiguration _config;
 
-    public AccountController(IAccountService accountService)
+    public AccountController(IAccountService accountService, RsaKeyProvider rsaKeyProvider, IConfiguration config)
     {
         _accountService = accountService;
+        _rsaKeyProvider = rsaKeyProvider;
+        _config = config;
     }
 
     [HttpPost("login")]
@@ -52,5 +60,33 @@ public class AccountController : ControllerBase
         if (!exist) 
             return Ok(true);
         return BadRequest("Username is already in use");
+    }
+
+    [HttpPost("refresh-token")]
+    public async Task<ActionResult<TokenResponse>> RefreshToken([FromBody] RefreshTokenRequest request)
+    {
+        var validationParameters = new TokenValidationParameters()
+        {
+            ValidateIssuer = true,
+            ValidIssuer = "http://localhost:5299",
+            ValidateAudience = false,
+            IssuerSigningKey = _rsaKeyProvider.GetPublicKey(_config["Rsa:PublicKeyDirectory"], _config["Rsa:Kid"]),
+            ValidateLifetime = false
+        };
+        
+        string expiredToken = request.ExpiredToken;
+        if (expiredToken.StartsWith("Bearer "))
+            expiredToken = expiredToken.Substring("Bearer ".Length);
+        
+        var handler = new JwtSecurityTokenHandler();
+        var principal = handler.ValidateToken(expiredToken, validationParameters, out _);
+        if (principal == null)
+            return Unauthorized();
+        
+        var userId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? null;
+        if (userId == null)
+            return Unauthorized();
+        
+        return await _accountService.RefreshToken(userId, request.RefreshToken);
     }
 }

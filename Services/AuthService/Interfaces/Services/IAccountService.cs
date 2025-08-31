@@ -10,4 +10,5 @@ public interface IAccountService
     Task<IdentityResult> Register(RegisterAccountDto account);
     Task<bool> VerifyEmail(string email);
     Task<bool> VerifyUsername(string username);
+    Task<TokenResponse> RefreshToken(string accountId, string refreshToken);
 }

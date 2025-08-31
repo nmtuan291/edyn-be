@@ -1,7 +1,9 @@
 using AuthService.Data;
 using AuthService.Entities;
 using AuthService.Grpc;
+using AuthService.Interfaces.Repositories;
 using AuthService.Interfaces.Services;
+using AuthService.Repositories;
 using AuthService.Services;
 using AuthService.Services.Sercurity;
 using Microsoft.AspNetCore.Identity;
@@ -30,6 +32,7 @@ builder.Services.AddIdentity<Account, IdentityRole>()
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddSingleton<RsaKeyProvider>();
+builder.Services.AddScoped<ITokenRepository, TokenRepository>();
 
 builder.Services.AddGrpcClient<ProfileService.ProfileServiceClient>(option =>
 {

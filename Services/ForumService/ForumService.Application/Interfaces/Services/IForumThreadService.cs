@@ -6,13 +6,13 @@ namespace ForumService.ForumService.Application.Interfaces.Services
 {
     public interface IForumThreadService
     {
-        Task<List<CommentDto>> GetCommentsByThreadId(Guid threadId);
-
+        Task<List<CommentDto>> GetCommentsByThreadId(Guid threadId, string? userId);
         Task<List<ForumThreadDto>> GetThreadsByForumId(Guid forumId, string? userId, int pageNumber, int pageSize,
             SortBy sortBy = SortBy.Hot, SortDate sortDate = SortDate.All);
         Task InsertComment(CommentDto comment, Guid userId, string username);
         Task CreateForumThread(ForumThreadDto forumThread, Guid userId);
         Task<ForumThreadDto?> UpdateThreadVote(Guid threadId, Guid userId, bool isDownVote = false);
         Task<ForumThreadDto?> GetThreadById(Guid threadId);
+        Task<CommentDto?> UpdateCommentVote(Guid commentId, Guid userId, bool isDownVote);
     }
 }

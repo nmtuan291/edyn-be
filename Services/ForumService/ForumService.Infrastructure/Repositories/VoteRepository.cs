@@ -28,6 +28,14 @@ public class VoteRepository : IVoteRepository
         await _redis.HashSetAsync($"vote:{vote.UserId}:{forumId}", 
             vote.ThreadId.ToString(), vote.DownVote);
     }
+    
+    public async Task AddCommentVoteAsync(CommentVote vote, Guid threadId)
+    {
+        ThreadVoteEf threadVoteEf = _mapper.Map<ThreadVoteEf>(vote); 
+        await _context.ThreadVotes.AddAsync(threadVoteEf);
+        await _redis.HashSetAsync($"vote:{vote.UserId}:{threadId}", 
+            vote.ComentId.ToString(), vote.DownVote);
+    }
 
     public async Task DeleteThreadVote(ThreadVote vote, Guid forumId)
     {
@@ -35,7 +43,7 @@ public class VoteRepository : IVoteRepository
         _context.ThreadVotes.Remove(threadVoteEf);
         await _redis.HashDeleteAsync($"vote:{vote.UserId}:{forumId}", vote.ThreadId.ToString());
     }
-
+    
     public async Task UpdateThreadVoteRedisAsync(Guid userId, Guid threadId, Guid forumId, bool downVote)
     {
         /*ThreadVoteEf threadVoteEf = _mapper.Map<ThreadVoteEf>(vote);
@@ -50,12 +58,34 @@ public class VoteRepository : IVoteRepository
             threadId.ToString());
     }
 
+    public async Task UpdateCommentVoteRedisAsync(Guid userId, Guid commentId, Guid threadId, bool downVote)
+    {
+        /*ThreadVoteEf threadVoteEf = _mapper.Map<ThreadVoteEf>(vote);
+        _context.ThreadVotes.Update(threadVoteEf);*/
+        await _redis.HashSetAsync($"vote:{userId}:{threadId}", 
+            commentId.ToString(), downVote);
+    }
+    
+    public async Task RemoveCommentVoteRedisAsync(Guid userId, Guid commentId, Guid threadId)
+    {
+        await _redis.HashDeleteAsync($"vote:{userId}:{threadId}", 
+            commentId.ToString());
+    }
+
     public async Task<ThreadVote?> GetThreadVoteAsync(Guid threadId, Guid userId)
     {
-        var threadvote = await _context.ThreadVotes
+        var threadVote = await _context.ThreadVotes
             .SingleOrDefaultAsync(t => t.ThreadId == threadId && t.UserId == userId);
         
-        return _mapper.Map<ThreadVote>(threadvote);
+        return _mapper.Map<ThreadVote>(threadVote);
+    }
+    
+    public async Task<CommentVote?> GetCommentVoteAsync(Guid commentId, Guid userId)
+    {
+        var commentVote = await _context.CommentVotes
+            .SingleOrDefaultAsync(t => t.ComentId == commentId && t.UserId == userId);
+        
+        return _mapper.Map<CommentVote>(commentVote);
     }
 
     public async Task<int> CountUpvotesAsync(Guid threadId)
@@ -67,6 +97,12 @@ public class VoteRepository : IVoteRepository
     public async Task<Dictionary<Guid, bool>> GetVotedThreadsAsync(Guid userId, Guid forumId)
     {
         var result = await _redis.HashGetAllAsync($"vote:{userId}:{forumId}");
+        return result.ToDictionary(r => Guid.Parse(r.Name.ToString()), r => (bool)r.Value);
+    }
+    
+    public async Task<Dictionary<Guid, bool>> GetVotedCommentsAsync(Guid userId, Guid threadId)
+    {
+        var result = await _redis.HashGetAllAsync($"vote:{userId}:{threadId}");
         return result.ToDictionary(r => Guid.Parse(r.Name.ToString()), r => (bool)r.Value);
     }
 }

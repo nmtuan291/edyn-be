@@ -11,4 +11,9 @@ public interface IVoteRepository
     Task<int> CountUpvotesAsync(Guid threadId);
     Task<Dictionary<Guid, bool>> GetVotedThreadsAsync(Guid userId, Guid forumId);
     Task RemoveThreadVoteRedisAsync(Guid userId, Guid threadId, Guid forumId);
+    Task AddCommentVoteAsync(CommentVote vote, Guid threadId);
+    Task<CommentVote?> GetCommentVoteAsync(Guid commentId, Guid userId);
+    Task<Dictionary<Guid, bool>> GetVotedCommentsAsync(Guid userId, Guid threadId);
+    Task UpdateCommentVoteRedisAsync(Guid userId, Guid commentId, Guid threadId, bool downVote);
+    Task RemoveCommentVoteRedisAsync(Guid userId, Guid commentId, Guid threadId);
 }

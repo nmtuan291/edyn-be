@@ -13,9 +13,6 @@ namespace ForumService.ForumService.Domain.Entities
         public string ForumImage { get; set; }
         public DateTime CreatedAt { get; set; }
         
-        public Forum()
-        {
-            
-        }
+        public Forum() { }
     }
 }

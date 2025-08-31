@@ -41,21 +41,12 @@ namespace ForumService.ForumService.Application;
             if (votedThreads.TryGetValue(dto.Id!.Value, out var v))
             {
               if (v)
-              {
-                Console.WriteLine($"Vote for {dto.Id} is down");
                 dto.Vote = VoteStatus.DownVote;
-              }
               else
-              {
-                Console.WriteLine($"Vote for {dto.Id} is up");
                 dto.Vote = VoteStatus.UpVote;
-              }
             }
             else
-            {
-              Console.WriteLine($"Vote for {dto.Id} is none");
               dto.Vote = VoteStatus.NoVote;
-            }
           }
           else
           {
@@ -66,14 +57,37 @@ namespace ForumService.ForumService.Application;
         .ToList();
     }
 
-    public async Task<List<CommentDto>> GetCommentsByThreadId(Guid threadId)
+    public async Task<List<CommentDto>> GetCommentsByThreadId(Guid threadId, string? userId)
     {
       if (threadId == Guid.Empty)
         throw new ArgumentNullException(nameof(threadId));
 
       var comments = await _unitOfWork.CommentRepo.GetCommentByThreadIdAsync(threadId);
+      var votedComments = string.IsNullOrEmpty(userId) 
+        ? new Dictionary<Guid, bool>()
+        : await _unitOfWork.VoteRepo.GetVotedCommentsAsync(Guid.Parse(userId), threadId);
 
-      return _mapper.Map<List<CommentDto>>(comments);
+      return _mapper.Map<List<CommentDto>>(comments)
+        .Select(dto =>
+        {
+          if (!string.IsNullOrEmpty(userId))
+          {
+            if (votedComments.TryGetValue(dto.Id!.Value, out var v))
+            {
+              if (v)
+                dto.Vote = VoteStatus.DownVote;
+              else
+                dto.Vote = VoteStatus.UpVote;
+            }
+            else
+              dto.Vote = VoteStatus.NoVote;
+          }
+          else
+          {
+            dto.Vote = VoteStatus.NoVote;
+          }
+          return dto;
+        }).ToList();
     }
 
     public async Task InsertComment(CommentDto comment, Guid userId, string ownerName)
@@ -168,6 +182,25 @@ namespace ForumService.ForumService.Application;
       await _unitOfWork.CommitAsync();
       
       return _mapper.Map<ForumThreadDto>(thread);
+    }
+    
+    public async Task<CommentDto?> UpdateCommentVote(Guid commentId, Guid userId, bool isDownVote)
+    {
+      var comment = await _unitOfWork.CommentRepo.GetCommentByIdAsync(commentId);
+      if (comment == null)
+        return null;
+      
+      bool isVoteExists = comment.Vote(userId, isDownVote);
+      await _unitOfWork.CommentRepo.UpdateCommentAsync(comment);
+      
+      if (isVoteExists)
+        await _unitOfWork.VoteRepo.UpdateCommentVoteRedisAsync(userId, commentId, comment.ThreadId, isDownVote);
+      else
+        await _unitOfWork.VoteRepo.RemoveThreadVoteRedisAsync(userId, commentId, comment.ThreadId);
+      
+      await _unitOfWork.CommitAsync();
+      
+      return _mapper.Map<CommentDto>(comment);
     }
 }
 

@@ -17,6 +17,7 @@ namespace ForumService.ForumService.Domain.Entities
         public DateTime? UpdatedAt { get; set; }
         public DateTime CreatedAt { get; set; }
         public bool Deleted { get; set; }
+        public ICollection<CommentVote> Votes { get; set; }
         public Comment() { }
 
         public Comment(Guid threadId, Guid ownerId, string ownerName,string content, Guid parentId)
@@ -39,6 +40,41 @@ namespace ForumService.ForumService.Domain.Entities
             UpdatedAt = DateTime.UtcNow;
             CreatedAt = DateTime.UtcNow;
             Deleted = false;
+        }
+        
+        public bool Vote(Guid userId, bool isDownVote)
+        {
+            bool voteExists = false;
+            var vote = Votes.FirstOrDefault(x => x.UserId == userId);
+            if (vote == null)
+            {
+                vote = new CommentVote()
+                {
+                    ComentId = Id,
+                    UserId = userId,
+                    DownVote = isDownVote,
+                };
+                Votes.Add(vote);
+                voteExists = true;
+            }
+            else
+            {
+                if (isDownVote == vote.DownVote)
+                {
+                    Votes.Remove(vote);
+                }
+                else
+                {
+                    vote.DownVote = isDownVote;
+                    voteExists = true;
+                }
+            }
+
+            int upVote = Votes.Count(v => !v.DownVote);
+            int downVote = Votes.Count(v => v.DownVote);
+            Upvote = upVote -  downVote;
+            
+            return voteExists;
         }
     }
 }

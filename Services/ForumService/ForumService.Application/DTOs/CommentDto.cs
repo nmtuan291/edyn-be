@@ -1,6 +1,7 @@
 ﻿using ForumService.ForumService.Domain.Entities;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
+using ForumService.ForumService.Application.Enums;
 using Grpc.Net.Client.Balancer;
 
 namespace ForumService.ForumService.Application.DTOs
@@ -18,5 +19,6 @@ namespace ForumService.ForumService.Application.DTOs
         public DateTime? UpdatedAt { get; set; }
         public DateTime? CreatedAt { get; set; }
         public required bool Deleted { get; set; }
+        public VoteStatus Vote { get; set; }
     }
 }
