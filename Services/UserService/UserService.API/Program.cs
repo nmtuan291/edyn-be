@@ -39,6 +39,6 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.MapGrpcService<GrpcProfileService>();
+app.MapGrpcService<UserProfileGrpcService>();
 
 app.Run();

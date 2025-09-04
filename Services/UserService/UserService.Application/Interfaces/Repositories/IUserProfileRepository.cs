@@ -6,4 +6,5 @@ public interface IUserProfileRepository
 {
     Task<User?> GetUserByIdAsync(string accountId);
     Task CreateUserAsync(User user);
+    Task<List<User>> GetUsersByIdsAsync(IEnumerable<string> accountIds);
 }

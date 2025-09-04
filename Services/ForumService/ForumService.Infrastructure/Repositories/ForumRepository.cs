@@ -85,5 +85,14 @@ namespace ForumService.ForumService.Infrastructure.Repositories
             
             return _mapper.Map<List<ForumUser>>(forums);
         }
+
+        public async Task<List<ForumUser>> GetForumUsersAsync(Guid forumId)
+        {
+            var users = await _context.ForumUsers
+                .Where(f => f.ForumId == forumId)
+                .ToListAsync();
+            
+            return _mapper.Map<List<ForumUser>>(users);
+        }
     }
 }

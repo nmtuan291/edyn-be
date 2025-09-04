@@ -5,9 +5,12 @@ using AuthService.Exceptions;
 using AuthService.Interfaces.Repositories;
 using AuthService.Interfaces.Services;
 using AuthService.Services.Sercurity;
+using Grpc.Core;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Polly;
+using Polly.Retry;
 using UserService.Grpc;
 
 namespace AuthService.Services;
@@ -21,6 +24,7 @@ public class AccountService : IAccountService
     private readonly RsaKeyProvider  _rsaKeyProvider;
     private readonly IConfiguration _config;
     private readonly ITokenRepository _tokenRepository;
+    private readonly AsyncRetryPolicy _retryPolicy;
     
     public AccountService(UserManager<Account> userManager, ITokenService tokenService, 
         ProfileService.ProfileServiceClient profileService,  RsaKeyProvider rsaKeyProvider, IConfiguration config
@@ -32,6 +36,9 @@ public class AccountService : IAccountService
         _rsaKeyProvider = rsaKeyProvider;
         _config = config;
         _tokenRepository = tokenRepository;
+        _retryPolicy = Policy
+            .Handle<Exception>()
+            .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(retryAttempt));
     }
     
     public async Task<LoginResponseDto?> Login(LoginAccountDto account)
@@ -118,18 +125,42 @@ public class AccountService : IAccountService
             CreatedAt = DateTime.UtcNow,
         };
         
-        var result = await _userManager.CreateAsync(user, account.Password);
+        var userCreated = await _userManager.CreateAsync(user, account.Password);
+        if (!userCreated.Succeeded)
+            return IdentityResult.Failed();
 
-        CreateProfileRequest request = new()
+        try
         {
-            Id = user.Id,
-            Username = user.UserName,
-            Email = user.Email,
-            Gender = account.Gender,
-        };
-        var gRpcResult = _profileService.CreateProfile(request);
+            CreateProfileRequest request = new()
+            {
+                Id = user.Id,
+                Username = user.UserName,
+                Email = user.Email,
+                Gender = account.Gender,
+            };
+
+            await _retryPolicy.ExecuteAsync(() =>
+            {
+                var gRpcResult = _profileService.CreateProfile(request);
+
+                if (!gRpcResult.Success)
+                    throw new CreateProfileException(gRpcResult.Message);
+                
+                return Task.CompletedTask;
+            });
+        }
+        catch (RpcException ex)
+        {
+            await _userManager.DeleteAsync(user);
+            return IdentityResult.Failed(new IdentityError() { Description = ex.Status.Detail });
+        }
+        catch (CreateProfileException ex)
+        {
+            await _userManager.DeleteAsync(user);
+            return IdentityResult.Failed(new IdentityError { Description = ex.Message });
+        }
         
-        return result;
+        return IdentityResult.Success;
     }
 
     public async Task<bool> VerifyEmail(string email)

@@ -21,8 +21,30 @@ public class UserProfileService : IUserProfileService
             throw new ArgumentNullException(nameof(accountId));
 
         var user = await _userProfileRepository.GetUserByIdAsync(accountId);
+        if (user == null)
+            return null;
 
-        return null;
+        return new UserProfileDto
+        {
+            AccountId = accountId,
+            Avatar = user.Avatar,
+            Birthday = user.Birthday ?? DateTime.MinValue,
+            UserName = user.Username,
+            Gender = user.Gender,
+        };
+    }
+
+    public async Task<List<UserProfileDto>> GetUsers(IEnumerable<string> accountIds)
+    {
+        var users = await _userProfileRepository.GetUsersByIdsAsync(accountIds);
+        return users.Select(u => new UserProfileDto
+        {
+            AccountId = u.AccountId,
+            Avatar = u.Avatar,
+            Birthday = u.Birthday ?? DateTime.MinValue,
+            UserName = u.Username,
+            Gender = u.Gender,
+        }).ToList();
     }
 
     public async Task CreateProfile(CreateProfileRequest request)

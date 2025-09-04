@@ -7,4 +7,5 @@ public class UserProfileDto
     public DateTime Birthday { get; set; }
     public required string Avatar { get; set; }
     public string? Bio { get; set; } 
+    public int? Gender { get; set; }
 }

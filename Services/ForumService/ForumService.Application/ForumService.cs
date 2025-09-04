@@ -4,6 +4,10 @@ using ForumService.ForumService.Application.Exceptions;
 using ForumService.ForumService.Application.Interfaces.UnitOfWork;
 using ForumService.ForumService.Domain.Entities;
 using ForumService.ForumService.Application.Interfaces.Services;
+using Grpc.Core;
+using Polly;
+using Polly.Retry;
+using UserService.Grpc;
 
 namespace ForumService.ForumService.Application
 {
@@ -11,17 +15,22 @@ namespace ForumService.ForumService.Application
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
+        private readonly UserProfileService.UserProfileServiceClient _userProfileService;
+        private readonly AsyncRetryPolicy _retryPolicy;
 
-        public ForumService(IUnitOfWork unitOfWork, IMapper mapper)
+        public ForumService(IUnitOfWork unitOfWork, IMapper mapper,  UserProfileService.UserProfileServiceClient userProfileService)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _userProfileService = userProfileService;
+            _retryPolicy = Policy
+                .Handle<Exception>()
+                .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)));
         }
 
         public async Task<ForumDto?> GetForum(string forumName)
         {
             Forum? forum = await _unitOfWork.ForumRepo.GetForumByNameAsync(forumName);
-
             if (forum == null)
                 return null;
 
@@ -88,6 +97,35 @@ namespace ForumService.ForumService.Application
                     Name = f.Forum.Name,
                     ForumImage = f.Forum.ForumImage,
                 }).ToList();
+        }
+
+        public async Task<List<UserDto>> GetForumMembers(Guid forumId)
+        {
+            var userIds = (await _unitOfWork.ForumRepo
+                .GetForumUsersAsync(forumId))
+                .Select(f => f.UserId.ToString())
+                .ToList();
+            
+            if (userIds.Count == 0)
+                return new List<UserDto>();
+
+            try
+            {
+                List<UserDto> users = new List<UserDto>();
+                await _retryPolicy.ExecuteAsync(async () =>
+                {
+                    var request = new ProfileRequest();
+                    request.Id.AddRange(userIds);
+                    var response = await _userProfileService.GetUserProfileAsync(request);
+                    users = _mapper.Map<List<UserDto>>(response.Profiles);
+                });
+
+                return users;
+            }
+            catch (Exception ex)
+            {
+                return new List<UserDto>();
+            }
         }
     }
 }

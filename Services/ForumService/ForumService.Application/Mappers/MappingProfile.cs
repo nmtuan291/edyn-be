@@ -2,6 +2,7 @@ using AutoMapper;
 using ForumService.ForumService.Application.DTOs;
 using ForumService.ForumService.Domain.Entities;
 using ForumService.ForumService.Infrastructure.Models;
+using UserService.Grpc;
 
 namespace ForumService.ForumService.Application.Mappers;
 
@@ -34,5 +35,7 @@ public class MappingProfile : Profile
         CreateMap<ThreadVote, ThreadVoteEf>();
         CreateMap<Permission, PermissionEf>();
         CreateMap<CommentVote, CommentVoteEf>();
+        
+        CreateMap<ProfileResponse, UserDto>();
     }
 }

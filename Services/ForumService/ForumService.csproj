@@ -26,6 +26,7 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.0" />
     <PackageReference Include="Moq" Version="4.20.72" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
+    <PackageReference Include="Polly" Version="8.6.3" />
     <PackageReference Include="RabbitMQ.Client" Version="7.1.2" />
     <PackageReference Include="StackExchange.Redis" Version="2.8.41" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.12.1" />
@@ -45,6 +46,10 @@
     <Reference Include="System.IdentityModel.Tokens.Jwt">
       <HintPath>..\..\..\..\.nuget\packages\system.identitymodel.tokens.jwt\8.12.0\lib\net9.0\System.IdentityModel.Tokens.Jwt.dll</HintPath>
     </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Contracts\Contracts.csproj" />
   </ItemGroup>
 
 </Project>

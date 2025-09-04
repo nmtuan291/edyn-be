@@ -12,5 +12,6 @@ namespace ForumService.ForumService.Application.Interfaces.Repositories
         Task<Forum?> GetForumByNameAsync(string name);
         Task<string?> GetUserPermissionAsync(Guid forumId, Guid userId);
         Task<List<ForumUser>> GetJoinedForumsByUserIdAsync(Guid userId);
+        Task<List<ForumUser>> GetForumUsersAsync(Guid forumId);
     }
 }
