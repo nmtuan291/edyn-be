@@ -77,7 +77,7 @@ public class PermissionServiceTests
             .ReturnsAsync((int?)null);
 
         mockRepo
-            .Setup(r => r.GetForumUserAsync(forumId, userId))
+            .Setup(r => r.GetForumUserAsync(forumId, userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ForumUser()
             {
                 ForumId = forumId,

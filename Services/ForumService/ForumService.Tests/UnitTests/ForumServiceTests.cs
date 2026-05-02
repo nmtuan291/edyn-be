@@ -23,7 +23,7 @@ public class ForumServiceTests
         
         var mockPermissionService = new Mock<IPermissionService>();
         mockPermissionService
-            .Setup(s => s.HasPermissionAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), ForumPermissionType.BanMember))
+            .Setup(s => s.HasPermissionAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), ForumPermissionType.BanMember, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
         var mockRepo = new Mock<IForumRepository>();
@@ -32,7 +32,7 @@ public class ForumServiceTests
             .Returns(Task.CompletedTask);
         
         mockRepo
-            .Setup(r => r.GetForumUserAsync(forumId, targetUserId))
+            .Setup(r => r.GetForumUserAsync(forumId, targetUserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ForumUser
             {
                 ForumId = forumId,
@@ -41,7 +41,7 @@ public class ForumServiceTests
             });
         
         mockRepo
-            .Setup(r => r.GetForumUserAsync(forumId, actingUserId))
+            .Setup(r => r.GetForumUserAsync(forumId, actingUserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ForumUser
             {
                 ForumId = forumId,
