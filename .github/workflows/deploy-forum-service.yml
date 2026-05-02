@@ -10,8 +10,8 @@ on:
 
 env:
   SERVICE_NAME: forum-service
-  IMAGE_NAME: us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/edyn-repo/forum-service
-  REGION: us-central1
+  REGION: asia-east2
+  IMAGE_NAME: asia-east2-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/edyn-repo/forum-service
 
 jobs:
   build-and-deploy:
