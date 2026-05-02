@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+package edyn;
+
+option csharp_namespace = "UserService.Grpc";
+
+service UserProfileService {
+  rpc GetUserProfile (ProfileRequest) returns (ProfilesResponse);
+  rpc CreateProfile (CreateProfileRequest) returns (CreateProfileResponse);
+}
+
+message ProfileRequest {
+  repeated string id = 1;
+}
+
+message ProfileResponse {
+  string id = 1;
+  google.protobuf.Timestamp birth_day = 2;
+  string username = 3;
+  string avatar = 4;
+  string bio = 5;
+  int32 gender = 6;
+}
+
+message ProfilesResponse {
+  repeated ProfileResponse profiles = 1;
+}
+
+message CreateProfileRequest {
+  string id = 1;
+  string username = 2;
+  string email = 3;
+  int32 gender = 4;
+}
+
+message CreateProfileResponse {
+  bool success = 1;
+  string message = 2;
+}

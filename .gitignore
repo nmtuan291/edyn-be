@@ -1,0 +1,8 @@
+/.vs
+/.vscode
+/.cursor
+**/obj/
+**/bin/
+
+# Secrets - development config with credentials
+**/appsettings.Development.json
