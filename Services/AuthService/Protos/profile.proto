@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+option csharp_namespace = "UserService.Grpc";
+
+service ProfileService {
+  rpc CreateProfile (CreateProfileRequest) returns (CreateProfileResponse);
+}
+
+message CreateProfileRequest {
+  string id = 1;
+  string username = 2;
+  string email = 3;
+  int32 gender = 4;
+}
+
+message CreateProfileResponse {
+  bool success = 1;
+  string message = 2;
+}

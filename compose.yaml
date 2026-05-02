@@ -1,0 +1,13 @@
+﻿services:
+  chatservice:
+    image: chatservice
+    build:
+      context: .
+      dockerfile: Services/ChatService/Dockerfile
+
+  signalrservice:
+    image: signalrservice
+    build:
+      context: .
+      dockerfile: SignalRService/Dockerfile
+
