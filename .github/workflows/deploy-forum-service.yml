@@ -1,0 +1,65 @@
+name: Deploy Forum Service to Cloud Run
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'Services/ForumService/**'
+      - '.github/workflows/deploy-forum-service.yml'
+
+env:
+  SERVICE_NAME: forum-service
+  IMAGE_NAME: us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/edyn-repo/forum-service
+  REGION: us-central1
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: '${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}'
+          service_account: '${{ secrets.GCP_SERVICE_ACCOUNT }}'
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker Authentication
+        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+
+      - name: Build Docker Image
+        run: |
+          docker build \
+            -t ${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            -t ${{ env.IMAGE_NAME }}:latest \
+            -f Services/ForumService/Dockerfile \
+            .
+
+      - name: Push Docker Image
+        run: |
+          docker push ${{ env.IMAGE_NAME }}:${{ github.sha }}
+          docker push ${{ env.IMAGE_NAME }}:latest
+
+      - name: Deploy to Cloud Run
+        id: deploy
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ env.SERVICE_NAME }}
+          region: ${{ env.REGION }}
+          image: ${{ env.IMAGE_NAME }}:${{ github.sha }}
+          flags: |
+            --allow-unauthenticated
+            --port=8080
+            
+      - name: Show Deployment URL
+        run: echo "Deployed to ${{ steps.deploy.outputs.url }}"
