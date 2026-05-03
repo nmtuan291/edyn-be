@@ -14,6 +14,15 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 builder.Services.AddControllers();
+
+// Configure Kestrel for HTTP/2 cleartext (Required for gRPC on Cloud Run)
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ConfigureEndpointDefaults(listenOptions =>
+    {
+        listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http2;
+    });
+});
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
