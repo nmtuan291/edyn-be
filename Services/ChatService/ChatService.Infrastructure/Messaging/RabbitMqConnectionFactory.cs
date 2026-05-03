@@ -29,7 +29,8 @@ public class RabbitMqConnectionFactory: IAsyncDisposable
                         HostName = hostName,
                         Port = _configuration.GetValue<int>("RabbitMQ:Port", 5672),
                         UserName = _configuration["RabbitMQ:UserName"] ?? "guest",
-                        Password = _configuration["RabbitMQ:Password"] ?? "guest"
+                        Password = _configuration["RabbitMQ:Password"] ?? "guest",
+                        VirtualHost = _configuration["RabbitMQ:VirtualHost"] ?? "/"
                     };
                     if (_configuration.GetValue("RabbitMQ:UseTls", false))
                     {

@@ -36,7 +36,8 @@ public class RabbitMqConsumer: BackgroundService
             HostName = hostName,
             Port = port,
             UserName = _config["RabbitMQ:UserName"] ?? "guest",
-            Password = _config["RabbitMQ:Password"] ?? "guest"
+            Password = _config["RabbitMQ:Password"] ?? "guest",
+            VirtualHost = _config["RabbitMQ:VirtualHost"] ?? "/"
         };
         if (_config.GetValue("RabbitMQ:UseTls", false))
         {
