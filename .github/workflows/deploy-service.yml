@@ -58,6 +58,7 @@ jobs:
           image: ${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/edyn-repo/${{ inputs.service-name }}:${{ github.sha }}
           flags: |
             --port=8080
+            --allow-unauthenticated
 
       - name: Show URL
         run: echo "✅ Deployed ${{ inputs.service-name }} to ${{ steps.deploy.outputs.url }}"
