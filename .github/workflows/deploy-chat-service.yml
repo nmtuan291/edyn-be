@@ -1,0 +1,14 @@
+name: Deploy Chat Service
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'Services/ChatService/**'
+      - '.github/workflows/deploy-chat-service.yml'
+jobs:
+  deploy:
+    uses: ./.github/workflows/deploy-service.yml
+    with:
+      service-name: chat-service
+      dockerfile-path: Services/ChatService/Dockerfile
+    secrets: inherit

@@ -1,0 +1,14 @@
+name: Deploy Notification Service
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'Services/NotificationService/**'
+      - '.github/workflows/deploy-notification-service.yml'
+jobs:
+  deploy:
+    uses: ./.github/workflows/deploy-service.yml
+    with:
+      service-name: notification-service
+      dockerfile-path: Services/NotificationService/Dockerfile
+    secrets: inherit
