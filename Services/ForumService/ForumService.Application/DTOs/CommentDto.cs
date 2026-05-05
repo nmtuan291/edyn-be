@@ -17,6 +17,6 @@ namespace ForumService.ForumService.Application.DTOs
         public DateTime? UpdatedAt { get; init; }
         public DateTime? CreatedAt { get; init; }
         public required bool Deleted { get; init; }
-        public VoteStatus Vote { get; init; }
+        public VoteStatus Vote { get; set; }
     }
 }

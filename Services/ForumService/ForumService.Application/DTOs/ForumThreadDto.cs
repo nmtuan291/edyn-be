@@ -20,8 +20,8 @@ namespace ForumService.ForumService.Application.DTOs
         public required int Upvote { get; init; }
         public  DateTime? CreatedAt { get; init; }
         public DateTime? LastUpdatedAt { get; init; }
-        public VoteStatus Vote { get; init; }
-        public string? ForumName { get; init; }
-        public string? ForumImage { get; init; }
+        public VoteStatus Vote { get; set; }
+        public string? ForumName { get; set; }
+        public string? ForumImage { get; set; }
     }
 }
