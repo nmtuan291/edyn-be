@@ -2,19 +2,19 @@ using System.ComponentModel.DataAnnotations;
 
 namespace AuthService.AuthService.Application.Dtos;
 
-public class RegisterAccountDto
+public record RegisterAccountDto
 {
     [Required, MinLength(3), MaxLength(50)]
-    public required string Username { get; set; }
+    public required string Username { get; init; }
     
     [Required, MinLength(6), MaxLength(100)]
-    public required string Password { get; set; }
+    public required string Password { get; init; }
     
     [Required]
-    public required string PasswordVerify { get; set; }
+    public required string PasswordVerify { get; init; }
     
     [Required, EmailAddress]
-    public required string Email { get; set; }
+    public required string Email { get; init; }
     
-    public required int Gender { get; set; }
+    public required int Gender { get; init; }
 }

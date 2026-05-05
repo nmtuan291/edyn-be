@@ -1,8 +1,8 @@
 namespace ForumService.ForumService.Application.DTOs;
 
-public class NotificationMessageDto
+public record NotificationMessageDto
 {
-    public string UserId { get; set; }
-    public string Message { get; set; }
-    public DateTime CreatedOn { get; set; }
+    public string UserId { get; init; } = string.Empty;
+    public string Message { get; init; } = string.Empty;
+    public DateTime CreatedOn { get; init; }
 }

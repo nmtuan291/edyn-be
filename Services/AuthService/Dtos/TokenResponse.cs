@@ -1,7 +1,7 @@
 namespace AuthService.AuthService.Application.Dtos;
 
-public class TokenResponse
+public record TokenResponse
 {
-    public string AccessToken { get; set; }
-    public string RefreshToken { get; set; }
+    public string AccessToken { get; init; } = string.Empty;
+    public string RefreshToken { get; init; } = string.Empty;
 }

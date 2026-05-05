@@ -1,9 +1,9 @@
 namespace ForumService.ForumService.Application.DTOs;
 
-public class ForumTagDto
+public record ForumTagDto
 {
-    public int Id { get; set; }
-    public Guid ForumId { get; set; }
-    public required string Name { get; set; }
-    public required string Color { get; set; }
+    public int Id { get; init; }
+    public Guid ForumId { get; init; }
+    public required string Name { get; init; }
+    public required string Color { get; init; }
 }

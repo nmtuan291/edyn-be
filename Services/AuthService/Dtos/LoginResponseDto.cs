@@ -1,10 +1,10 @@
 namespace AuthService.AuthService.Application.Dtos;
 
-public class LoginResponseDto
+public record LoginResponseDto
 {
-    public required string Id { get; set; }
-    public required string UserName { get; set; }
-    public required string Email { get; set; }
-    public required string AccessToken { get; set; }
-    public required string RefreshToken { get; set; }
+    public required string Id { get; init; }
+    public required string UserName { get; init; }
+    public required string Email { get; init; }
+    public required string AccessToken { get; init; }
+    public required string RefreshToken { get; init; }
 }

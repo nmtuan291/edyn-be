@@ -2,7 +2,7 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace AuthService.Dtos;
 
-public class JwtTokenGenerationRequest
+public record JwtTokenGenerationRequest
 {
     public required string UserId { get; init; }
     public required string Email { get; init; }

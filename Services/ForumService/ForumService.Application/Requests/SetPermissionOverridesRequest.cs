@@ -2,7 +2,7 @@ using ForumService.ForumService.Application.Enums;
 
 namespace ForumService.ForumService.Application.Requests;
 
-public class SetPermissionOverridesRequest
+public record SetPermissionOverridesRequest
 {
-    public ForumPermissionType Permissions { get; set; }
+    public ForumPermissionType Permissions { get; init; }
 }

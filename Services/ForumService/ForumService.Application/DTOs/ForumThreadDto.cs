@@ -1,27 +1,27 @@
-﻿using ForumService.ForumService.Domain.Entities;
+using ForumService.ForumService.Domain.Entities;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
 using ForumService.ForumService.Application.Enums;
 
 namespace ForumService.ForumService.Application.DTOs
 {
-    public class ForumThreadDto
+    public record ForumThreadDto
     {
-        public Guid? Id { get; set; }
-        public required Guid ForumId { get; set; }
-        public Guid? CreatorId { get; set; }
-        public required string Title { get; set; }
-        public required bool IsPinned { get; set; }
-        public ICollection<Tag>? Tags { get; set; }
-        public ICollection<PollItemDto>? PollItems { get; set; }
-        public ICollection<string>? Images { get; set; }
-        public required string Content { get; set; }
-        public required string Slug { get; set; }
-        public required int Upvote { get; set; }
-        public  DateTime? CreatedAt { get; set; }
-        public DateTime? LastUpdatedAt { get; set; }
-        public VoteStatus Vote { get; set; }
-        public string? ForumName { get; set; }
-        public string? ForumImage { get; set; }
+        public Guid? Id { get; init; }
+        public required Guid ForumId { get; init; }
+        public Guid? CreatorId { get; init; }
+        public required string Title { get; init; }
+        public required bool IsPinned { get; init; }
+        public ICollection<Tag>? Tags { get; init; }
+        public ICollection<PollItemDto>? PollItems { get; init; }
+        public ICollection<string>? Images { get; init; }
+        public required string Content { get; init; }
+        public required string Slug { get; init; }
+        public required int Upvote { get; init; }
+        public  DateTime? CreatedAt { get; init; }
+        public DateTime? LastUpdatedAt { get; init; }
+        public VoteStatus Vote { get; init; }
+        public string? ForumName { get; init; }
+        public string? ForumImage { get; init; }
     }
 }

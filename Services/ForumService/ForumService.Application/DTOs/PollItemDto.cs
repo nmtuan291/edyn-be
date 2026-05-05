@@ -1,7 +1,7 @@
 namespace ForumService.ForumService.Application.DTOs;
 
-public class PollItemDto
+public record PollItemDto
 {
-    public required string PollContent { get; set; }
-    public required int VoteCount { get; set; }
+    public required string PollContent { get; init; }
+    public required int VoteCount { get; init; }
 }

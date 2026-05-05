@@ -1,15 +1,15 @@
 namespace ChatService.ChatService.Application.DTOs;
 
-public class MessageDto
+public record MessageDto
 {
-    public Guid? Id { get; set; }
-    public Guid? ConversationId { get; set; }
-    public string? SenderId { get; set; }
-    public string ReceiverId { get; set; }
-    public string Content { get; set; }
-    public DateTime? CreatedAt { get; set; }
-    public DateTime? EditedAt { get; set; }
-    public bool IsDeleted { get; set; } = false;
-    public bool IsRead { get; set; } = false;
-    public DateTime? ReadAt { get; set; }
+    public Guid? Id { get; init; }
+    public Guid? ConversationId { get; init; }
+    public string? SenderId { get; init; }
+    public string ReceiverId { get; init; } = string.Empty;
+    public string Content { get; init; } = string.Empty;
+    public DateTime? CreatedAt { get; init; }
+    public DateTime? EditedAt { get; init; }
+    public bool IsDeleted { get; init; } = false;
+    public bool IsRead { get; init; } = false;
+    public DateTime? ReadAt { get; init; }
 }

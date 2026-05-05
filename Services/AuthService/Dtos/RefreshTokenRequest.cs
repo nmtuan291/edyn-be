@@ -2,11 +2,11 @@ using System.ComponentModel.DataAnnotations;
 
 namespace AuthService.AuthService.Application.Dtos;
 
-public class RefreshTokenRequest
+public record RefreshTokenRequest
 {
     [Required]
-    public required string ExpiredToken { get; set; }
+    public required string ExpiredToken { get; init; }
     
     [Required]
-    public required string RefreshToken { get; set; }
+    public required string RefreshToken { get; init; }
 }

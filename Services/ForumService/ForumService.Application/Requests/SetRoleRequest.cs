@@ -2,7 +2,7 @@ using ForumService.ForumService.Application.Enums;
 
 namespace ForumService.ForumService.Application.Requests;
 
-public class SetRoleRequest
+public record SetRoleRequest
 {
-    public ForumRole Role { get; set; }
+    public ForumRole Role { get; init; }
 }

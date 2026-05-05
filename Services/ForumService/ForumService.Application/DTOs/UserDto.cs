@@ -1,11 +1,11 @@
 namespace ForumService.ForumService.Application.DTOs;
 
-public class UserDto
+public record UserDto
 {
-    public Guid Id { get; set; }
-    public string Username { get; set; }
-    public string Avatar { get; set; }
-    public string Bio { get; set; }
-    public DateTime BirthDay { get; set; }
-    public int? Gender { get; set; }
-}
+    public Guid Id { get; init; }
+    public string Username { get; init; } = string.Empty;
+    public string Avatar { get; init; } = string.Empty;
+    public string Bio { get; init; } = string.Empty;
+    public DateTime BirthDay { get; init; }
+    public int? Gender { get; init; }
+}

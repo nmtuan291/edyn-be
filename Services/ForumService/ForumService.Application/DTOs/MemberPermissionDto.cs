@@ -2,11 +2,11 @@ using ForumService.ForumService.Application.Enums;
 
 namespace ForumService.ForumService.Application.DTOs;
 
-public class MemberPermissionDto
+public record MemberPermissionDto
 {
-    public Guid UserId { get; set; }
-    public Guid ForumId { get; set; }
-    public ForumRole Role { get; set; }
-    public ForumPermissionType EffectivePermissions { get; set; }
-    public ForumPermissionType? PermissionOverrides { get; set; }
+    public Guid UserId { get; init; }
+    public Guid ForumId { get; init; }
+    public ForumRole Role { get; init; }
+    public ForumPermissionType EffectivePermissions { get; init; }
+    public ForumPermissionType? PermissionOverrides { get; init; }
 }

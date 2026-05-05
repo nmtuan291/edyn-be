@@ -2,22 +2,22 @@ using System.Text.Json.Serialization;
 
 namespace ForumService.ForumService.Application.Requests;
 
-public class VoteRequest
+public record VoteRequest
 {
     /// <summary>Thread or comment id (works for both vote endpoints).</summary>
-    public Guid Id { get; set; }
+    public Guid Id { get; init; }
 
     [JsonPropertyName("threadId")]
-    public Guid? ThreadId { get; set; }
+    public Guid? ThreadId { get; init; }
 
     [JsonPropertyName("commentId")]
-    public Guid? CommentId { get; set; }
+    public Guid? CommentId { get; init; }
 
-    public bool IsDownvote { get; set; }
+    public bool IsDownvote { get; init; }
 
     /// <summary>Optional numeric vote: 1 = upvote, -1 = downvote (overrides <see cref="IsDownvote"/> when set).</summary>
     [JsonPropertyName("vote")]
-    public int? Vote { get; set; }
+    public int? Vote { get; init; }
 
     public Guid GetThreadId()
     {

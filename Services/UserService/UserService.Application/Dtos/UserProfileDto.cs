@@ -1,11 +1,11 @@
 namespace UserService.UserService.Application.Dtos;
 
-public class UserProfileDto
+public record UserProfileDto
 {
-    public string? AccountId { get; set; }
-    public required string UserName { get; set; }
-    public DateTime? Birthday { get; set; }
-    public required string Avatar { get; set; }
-    public string? Bio { get; set; } 
-    public int? Gender { get; set; }
-}
+    public string? AccountId { get; init; }
+    public required string UserName { get; init; }
+    public DateTime? Birthday { get; init; }
+    public required string Avatar { get; init; }
+    public string? Bio { get; init; } 
+    public int? Gender { get; init; }
+}

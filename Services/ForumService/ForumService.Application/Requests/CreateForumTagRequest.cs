@@ -1,7 +1,7 @@
 namespace ForumService.ForumService.Application.Requests;
 
-public class CreateForumTagRequest
+public record CreateForumTagRequest
 {
-    public required string Name { get; set; }
-    public string? Color { get; set; }
+    public required string Name { get; init; }
+    public string? Color { get; init; }
 }

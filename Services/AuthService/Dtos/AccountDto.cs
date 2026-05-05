@@ -1,9 +1,9 @@
 namespace AuthService.AuthService.Application.Dtos;
 
-public class AccountDto
+public record AccountDto
 {
-    public required string Id { get; set; }
-    public required string UserName { get; set; }
-    public required string Email { get; set; }
-    public required bool IsActive { get; set; }
+    public required string Id { get; init; }
+    public required string UserName { get; init; }
+    public required string Email { get; init; }
+    public required bool IsActive { get; init; }
 }

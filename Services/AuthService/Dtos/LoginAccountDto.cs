@@ -2,13 +2,13 @@ using System.ComponentModel.DataAnnotations;
 
 namespace AuthService.AuthService.Application.Dtos;
 
-public class LoginAccountDto
+public record LoginAccountDto
 {
     [Required]
-    public required string Username { get; set; }
+    public required string Username { get; init; }
     
     [Required]
-    public required string Password { get; set; }
+    public required string Password { get; init; }
     
-    public required bool IsEmail { get; set; }
+    public required bool IsEmail { get; init; }
 }

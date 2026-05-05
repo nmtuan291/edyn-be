@@ -5,16 +5,16 @@ namespace ForumService.ForumService.Application.DTOs;
 /// <summary>
 /// Forum member profile plus role and effective permission flags for that forum.
 /// </summary>
-public class ForumMemberDto
+public record ForumMemberDto
 {
-    public Guid Id { get; set; }
-    public string Username { get; set; } = string.Empty;
-    public string Avatar { get; set; } = string.Empty;
-    public string Bio { get; set; } = string.Empty;
-    public DateTime BirthDay { get; set; }
-    public int? Gender { get; set; }
+    public Guid Id { get; init; }
+    public string Username { get; init; } = string.Empty;
+    public string Avatar { get; init; } = string.Empty;
+    public string Bio { get; init; } = string.Empty;
+    public DateTime BirthDay { get; init; }
+    public int? Gender { get; init; }
 
-    public ForumRole Role { get; set; }
-    public ForumPermissionType EffectivePermissions { get; set; }
-    public ForumPermissionType? PermissionOverrides { get; set; }
+    public ForumRole Role { get; init; }
+    public ForumPermissionType EffectivePermissions { get; init; }
+    public ForumPermissionType? PermissionOverrides { get; init; }
 }
