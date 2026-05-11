@@ -11,4 +11,7 @@ public interface IAccountService
     Task<bool> VerifyEmail(string email);
     Task<bool> VerifyUsername(string username);
     Task<TokenResponse> RefreshToken(string accountId, string refreshToken);
+    Task Logout(string accountId, string refreshToken);
+    Task<IdentityResult> ChangePassword(string accountId, ChangePasswordDto request);
+    Task RevokeAllSessions(string accountId);
 }

@@ -59,4 +59,32 @@ public class UserProfileService : IUserProfileService
 
         await _userProfileRepository.CreateUserAsync(user);
     }
+
+    public async Task<UserProfileDto?> UpdateProfile(string accountId, UpdateUserProfileDto request)
+    {
+        var user = await _userProfileRepository.GetUserByIdAsync(accountId);
+        if (user == null)
+            return null;
+
+        if (request.Bio != null)
+            user.Bio = request.Bio;
+        if (request.Avatar != null)
+            user.Avatar = request.Avatar;
+        if (request.Birthday.HasValue)
+            user.Birthday = request.Birthday.Value;
+        if (request.Gender.HasValue)
+            user.Gender = request.Gender.Value;
+
+        await _userProfileRepository.UpdateUserAsync(user);
+
+        return new UserProfileDto
+        {
+            AccountId = accountId,
+            Avatar = user.Avatar,
+            Birthday = user.Birthday,
+            UserName = user.Username,
+            Gender = user.Gender,
+            Bio = user.Bio,
+        };
+    }
 }

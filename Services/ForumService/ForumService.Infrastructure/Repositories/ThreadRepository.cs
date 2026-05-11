@@ -115,5 +115,35 @@ namespace ForumService.ForumService.Infrastructure.Repositories
 
             _mapper.Map(thread, ef);
         }
+
+        public async Task<int> GetThreadCountByForumIdAsync(Guid forumId, CancellationToken cancellationToken = default)
+        {
+            return await _context.Threads
+                .AsNoTracking()
+                .CountAsync(t => t.ForumId == forumId, cancellationToken);
+        }
+
+        public async Task<List<ForumThread>> SearchThreadsAsync(string query, int page, int pageSize, CancellationToken cancellationToken = default)
+        {
+            var lowerQuery = query.ToLower();
+            var threads = await _context.Threads
+                .AsNoTracking()
+                .Include(t => t.PollItems)
+                .Include(t => t.Tags)
+                .Where(t => t.Title.ToLower().Contains(lowerQuery) || t.Content.ToLower().Contains(lowerQuery))
+                .OrderByDescending(t => t.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync(cancellationToken);
+            return _mapper.Map<List<ForumThread>>(threads);
+        }
+
+        public async Task<int> SearchThreadsCountAsync(string query, CancellationToken cancellationToken = default)
+        {
+            var lowerQuery = query.ToLower();
+            return await _context.Threads
+                .AsNoTracking()
+                .CountAsync(t => t.Title.ToLower().Contains(lowerQuery) || t.Content.ToLower().Contains(lowerQuery), cancellationToken);
+        }
     }
 }

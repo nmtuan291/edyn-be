@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using UserService.UserService.Application.Dtos;
@@ -26,4 +27,20 @@ public class UserController : ControllerBase
             return NotFound();
         return Ok(userProfile);
     }
+
+    [Authorize]
+    [HttpPut("profile")]
+    public async Task<ActionResult<UserProfileDto>> UpdateProfile([FromBody] UpdateUserProfileDto request)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
+
+        var updated = await _userProfileService.UpdateProfile(userId, request);
+        if (updated == null)
+            return NotFound();
+
+        return Ok(updated);
+    }
 }
+

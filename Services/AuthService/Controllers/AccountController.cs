@@ -3,6 +3,7 @@ using System.Security.Claims;
 using AuthService.AuthService.Application.Dtos;
 using AuthService.Interfaces.Services;
 using AuthService.Services.Security;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 
@@ -88,5 +89,44 @@ public class AccountController : ControllerBase
             return Unauthorized();
         
         return await _accountService.RefreshToken(userId, request.RefreshToken);
+    }
+
+    [Authorize]
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout([FromBody] LogoutRequest request)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
+
+        await _accountService.Logout(userId, request.RefreshToken);
+        return Ok();
+    }
+
+    [Authorize]
+    [HttpPost("change-password")]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto request)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
+
+        var result = await _accountService.ChangePassword(userId, request);
+        if (!result.Succeeded)
+            return BadRequest(result.Errors);
+
+        return Ok();
+    }
+
+    [Authorize]
+    [HttpPost("revoke-all-sessions")]
+    public async Task<IActionResult> RevokeAllSessions()
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
+
+        await _accountService.RevokeAllSessions(userId);
+        return Ok();
     }
 }

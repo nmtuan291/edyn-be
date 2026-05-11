@@ -46,4 +46,19 @@ public class NotificationMessageService: INotificationMessageService
         notification.IsRead = true;
         return await _repository.UpdateNotificationAsync(notification);
     }
+
+    public async Task<int> MarkAllAsRead(Guid userId)
+    {
+        return await _repository.MarkAllAsReadAsync(userId);
+    }
+
+    public async Task<int> GetUnreadCount(Guid userId)
+    {
+        return await _repository.GetUnreadCountAsync(userId);
+    }
+
+    public async Task<bool> DeleteNotification(Guid notificationId, Guid userId)
+    {
+        return await _repository.DeleteNotificationAsync(notificationId, userId);
+    }
 }

@@ -39,12 +39,39 @@ namespace ForumService.ForumService.API.Controllers
 
         [AllowAnonymous]
         [HttpGet("{forumId}")]
-        public async Task<ActionResult<List<ForumThreadDto>>> GetForumThreads(Guid forumId, CancellationToken cancellationToken)
+        public async Task<ActionResult<PagedResult<ForumThreadDto>>> GetForumThreads(
+            Guid forumId,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10,
+            [FromQuery] SortBy sortBy = SortBy.Hot,
+            [FromQuery] SortDate sortDate = SortDate.All,
+            CancellationToken cancellationToken = default)
         {
+            if (page < 1) page = 1;
+            if (pageSize is < 1 or > 50) pageSize = 10;
+
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var forumThreads = await _forumThreadService.GetThreadsByForumId(
-                new ForumThreadListQuery(forumId, userId, 1, 10), cancellationToken);
-            return Ok(forumThreads);
+            var result = await _forumThreadService.GetThreadsByForumIdPaged(
+                new ForumThreadListQuery(forumId, userId, page, pageSize, sortBy, sortDate), cancellationToken);
+            return Ok(result);
+        }
+
+        [AllowAnonymous]
+        [HttpGet("search")]
+        public async Task<ActionResult<PagedResult<ForumThreadDto>>> SearchThreads(
+            [FromQuery] string q = "",
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10,
+            CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(q))
+                return Ok(new PagedResult<ForumThreadDto> { Items = [], Page = 1, PageSize = pageSize, TotalCount = 0 });
+
+            if (page < 1) page = 1;
+            if (pageSize is < 1 or > 50) pageSize = 10;
+
+            var result = await _forumThreadService.SearchThreads(q, page, pageSize, cancellationToken);
+            return Ok(result);
         }
 
         [HttpGet("thread/{threadId}")]
@@ -130,6 +157,58 @@ namespace ForumService.ForumService.API.Controllers
             if (result == null)
                 return NotFound("Comment not found");
             return Ok(result);
+        }
+
+        [Authorize]
+        [HttpPut("thread/{threadId}")]
+        public async Task<ActionResult<ForumThreadDto?>> EditThread(Guid threadId, [FromBody] EditThreadRequest request)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            var result = await _forumThreadService.EditThread(threadId, Guid.Parse(userId), request);
+            if (result == null)
+                return NotFound("Thread not found");
+            return Ok(result);
+        }
+
+        [Authorize]
+        [HttpDelete("thread/{threadId}")]
+        public async Task<ActionResult> DeleteThread(Guid threadId)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            await _forumThreadService.DeleteThread(threadId, Guid.Parse(userId));
+            return Ok();
+        }
+
+        [Authorize]
+        [HttpPut("comment/{commentId}")]
+        public async Task<ActionResult<CommentDto?>> EditComment(Guid commentId, [FromBody] EditCommentRequest request)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            var result = await _forumThreadService.EditComment(commentId, Guid.Parse(userId), request);
+            if (result == null)
+                return NotFound("Comment not found");
+            return Ok(result);
+        }
+
+        [Authorize]
+        [HttpDelete("comment/{commentId}")]
+        public async Task<ActionResult> DeleteComment(Guid commentId)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            await _forumThreadService.DeleteComment(commentId, Guid.Parse(userId));
+            return Ok();
         }
     }
 }

@@ -196,5 +196,17 @@ namespace ForumService.ForumService.Infrastructure.Repositories
 
             return true;
         }
+
+        public async Task<List<Forum>> SearchForumsAsync(string query, CancellationToken cancellationToken = default)
+        {
+            var lowerQuery = query.ToLower();
+            var forums = await _context.Forums
+                .AsNoTracking()
+                .Where(f => f.Name.ToLower().Contains(lowerQuery) || f.Description.ToLower().Contains(lowerQuery))
+                .OrderBy(f => f.Name)
+                .Take(20)
+                .ToListAsync(cancellationToken);
+            return _mapper.Map<List<Forum>>(forums);
+        }
     }
 }

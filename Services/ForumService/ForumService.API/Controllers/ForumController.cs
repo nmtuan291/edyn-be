@@ -28,6 +28,17 @@ namespace ForumService.ForumService.API.Controllers
             return Ok(forums);
         }
 
+        [HttpGet("search")]
+        public async Task<ActionResult<List<ForumDto>>> SearchForums(
+            [FromQuery] string q = "", CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(q))
+                return Ok(new List<ForumDto>());
+
+            var forums = await _forumService.SearchForums(q, cancellationToken);
+            return Ok(forums);
+        }
+
         [Authorize]
         [HttpPost]
         public async Task<ActionResult> CreateForum([FromBody] ForumDto forumDto)
@@ -57,6 +68,28 @@ namespace ForumService.ForumService.API.Controllers
 
             await _forumService.AddUserToForum(forumGuidParsed, Guid.Parse(userId));
             return Ok();
+        }
+
+        [Authorize]
+        [HttpPost("leave/{forumId}")]
+        public async Task<ActionResult> LeaveForum(string forumId)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            if (!Guid.TryParse(forumId, out var forumGuidParsed))
+                return BadRequest("Invalid forum ID");
+
+            try
+            {
+                await _forumService.LeaveForumAsync(forumGuidParsed, Guid.Parse(userId));
+                return Ok();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [HttpGet("{forumName}")]

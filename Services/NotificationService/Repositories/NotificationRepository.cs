@@ -67,4 +67,49 @@ public class NotificationRepository: INotificationRepository
             return null;
         return JsonSerializer.Deserialize<Notification>(json!);
     }
+
+    public async Task<int> MarkAllAsReadAsync(Guid userId)
+    {
+        var notificationIds = await _redis.SortedSetRangeByScoreAsync(
+            $"user:{userId}:notifications_by_time",
+            DateTime.UtcNow.AddDays(-30).Ticks,
+            DateTime.UtcNow.Ticks);
+
+        int count = 0;
+        foreach (var id in notificationIds)
+        {
+            var notification = await GetNotificationAsync(Guid.Parse(id!), userId);
+            if (notification != null && notification.IsRead != true)
+            {
+                notification.IsRead = true;
+                await UpdateNotificationAsync(notification);
+                count++;
+            }
+        }
+        return count;
+    }
+
+    public async Task<int> GetUnreadCountAsync(Guid userId)
+    {
+        var notificationIds = await _redis.SortedSetRangeByScoreAsync(
+            $"user:{userId}:notifications_by_time",
+            DateTime.UtcNow.AddDays(-30).Ticks,
+            DateTime.UtcNow.Ticks);
+
+        int count = 0;
+        foreach (var id in notificationIds)
+        {
+            var notification = await GetNotificationAsync(Guid.Parse(id!), userId);
+            if (notification != null && notification.IsRead != true)
+                count++;
+        }
+        return count;
+    }
+
+    public async Task<bool> DeleteNotificationAsync(Guid notificationId, Guid userId)
+    {
+        var keyDeleted = await _redis.KeyDeleteAsync($"notification:{userId}:{notificationId}");
+        await _redis.SortedSetRemoveAsync($"user:{userId}:notifications_by_time", notificationId.ToString());
+        return keyDeleted;
+    }
 }

@@ -247,5 +247,25 @@ namespace ForumService.ForumService.Application
             var tags = await _unitOfWork.ForumRepo.GetForumTagCatalogAsync(forumId);
             return tags.Single(t => t.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
         }
+
+        public async Task LeaveForumAsync(Guid forumId, Guid userId)
+        {
+            var forumUser = await _unitOfWork.ForumRepo.GetForumUserAsync(forumId, userId);
+            if (forumUser == null)
+                throw new InvalidOperationException("You are not a member of this forum.");
+
+            if (forumUser.Role == ForumRole.Admin)
+                throw new InvalidOperationException("Forum admin cannot leave. Transfer ownership first.");
+
+            await _unitOfWork.ForumRepo.RemoveForumUserAsync(forumId, userId);
+            await _unitOfWork.CommitAsync();
+            await _unitOfWork.ForumRepo.InvalidateCachedPermissionsAsync(forumId, userId);
+        }
+
+        public async Task<List<ForumDto>> SearchForums(string query, CancellationToken cancellationToken = default)
+        {
+            var forums = await _unitOfWork.ForumRepo.SearchForumsAsync(query, cancellationToken);
+            return _mapper.Map<List<ForumDto>>(forums);
+        }
     }
 }

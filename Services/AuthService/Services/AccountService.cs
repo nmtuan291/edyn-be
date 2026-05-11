@@ -194,5 +194,34 @@ public class AccountService : IAccountService
     {
         var user = await _userManager.FindByNameAsync(username);
         return user != null;
-    } 
+    }
+
+    public async Task Logout(string accountId, string refreshToken)
+    {
+        await _tokenRepository.RevokeRefreshTokenAsync(accountId, refreshToken);
+    }
+
+    public async Task<IdentityResult> ChangePassword(string accountId, ChangePasswordDto request)
+    {
+        if (request.NewPassword != request.NewPasswordVerify)
+            return IdentityResult.Failed(new IdentityError { Code = "PasswordMismatch", Description = "New passwords do not match" });
+
+        var user = await _userManager.FindByIdAsync(accountId);
+        if (user == null)
+            return IdentityResult.Failed(new IdentityError { Code = "UserNotFound", Description = "User not found" });
+
+        var result = await _userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
+        if (result.Succeeded)
+        {
+            // Revoke all existing refresh tokens to force re-login on other devices
+            await _tokenRepository.RevokeAllRefreshTokensAsync(accountId);
+        }
+
+        return result;
+    }
+
+    public async Task RevokeAllSessions(string accountId)
+    {
+        await _tokenRepository.RevokeAllRefreshTokensAsync(accountId);
+    }
 }

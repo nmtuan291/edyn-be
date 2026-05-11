@@ -117,14 +117,26 @@ namespace ForumService.ForumService.Application;
         parentComment?.ThreadId.ToString() ?? ""));
     }
 
-    public async Task DeleteComment(Guid commentId)
+    public async Task DeleteComment(Guid commentId, Guid userId)
     {
+      var comment = await _unitOfWork.CommentRepo.GetCommentByIdAsync(commentId);
+      if (comment == null)
+        throw new KeyNotFoundException("Comment not found.");
+      if (comment.OwnerId != userId)
+        throw new UnauthorizedAccessException("You can only delete your own comments.");
+
       await _unitOfWork.CommentRepo.DeleteCommentById(commentId);
       await _unitOfWork.CommitAsync();
     }
 
-    public async Task DeleteThread(Guid threadId)
+    public async Task DeleteThread(Guid threadId, Guid userId)
     {
+      var thread = await _unitOfWork.ThreadRepo.GetThreadByIdAsync(threadId);
+      if (thread == null)
+        throw new KeyNotFoundException("Thread not found.");
+      if (thread.CreatorId != userId)
+        throw new UnauthorizedAccessException("You can only delete your own threads.");
+
       await _unitOfWork.ThreadRepo.DeleteThreadByIdAsync(threadId);
       await _unitOfWork.CommitAsync();
     }
@@ -238,6 +250,74 @@ namespace ForumService.ForumService.Application;
       await _unitOfWork.CommitAsync();
       
       return _mapper.Map<CommentDto>(comment);
+    }
+
+    public async Task<ForumThreadDto?> EditThread(Guid threadId, Guid userId, EditThreadRequest request)
+    {
+      var thread = await _unitOfWork.ThreadRepo.GetThreadByIdAsync(threadId);
+      if (thread == null)
+        return null;
+
+      if (thread.CreatorId != userId)
+        throw new UnauthorizedAccessException("You can only edit your own threads.");
+
+      if (request.Title != null)
+        thread.Title = request.Title;
+      if (request.Content != null)
+        thread.Content = request.Content;
+      thread.LastUpdatedAt = DateTime.UtcNow;
+
+      _unitOfWork.ThreadRepo.UpdateThread(thread);
+      await _unitOfWork.CommitAsync();
+
+      return _mapper.Map<ForumThreadDto>(thread);
+    }
+
+    public async Task<CommentDto?> EditComment(Guid commentId, Guid userId, EditCommentRequest request)
+    {
+      var comment = await _unitOfWork.CommentRepo.GetCommentByIdAsync(commentId);
+      if (comment == null)
+        return null;
+
+      if (comment.OwnerId != userId)
+        throw new UnauthorizedAccessException("You can only edit your own comments.");
+
+      comment.Content = request.Content;
+      comment.UpdatedAt = DateTime.UtcNow;
+
+      await _unitOfWork.CommentRepo.UpdateCommentAsync(comment);
+      await _unitOfWork.CommitAsync();
+
+      return _mapper.Map<CommentDto>(comment);
+    }
+
+    public async Task<PagedResult<ForumThreadDto>> GetThreadsByForumIdPaged(ForumThreadListQuery query, CancellationToken cancellationToken = default)
+    {
+      var items = await GetThreadsByForumId(query, cancellationToken);
+      var totalCount = await _unitOfWork.ThreadRepo.GetThreadCountByForumIdAsync(query.ForumId, cancellationToken);
+
+      return new PagedResult<ForumThreadDto>
+      {
+        Items = items,
+        Page = query.PageNumber,
+        PageSize = query.PageSize,
+        TotalCount = totalCount,
+      };
+    }
+
+    public async Task<PagedResult<ForumThreadDto>> SearchThreads(string query, int page, int pageSize, CancellationToken cancellationToken = default)
+    {
+      var threads = await _unitOfWork.ThreadRepo.SearchThreadsAsync(query, page, pageSize, cancellationToken);
+      var totalCount = await _unitOfWork.ThreadRepo.SearchThreadsCountAsync(query, cancellationToken);
+      var dtos = _mapper.Map<List<ForumThreadDto>>(threads);
+
+      return new PagedResult<ForumThreadDto>
+      {
+        Items = dtos,
+        Page = page,
+        PageSize = pageSize,
+        TotalCount = totalCount,
+      };
     }
 }
 

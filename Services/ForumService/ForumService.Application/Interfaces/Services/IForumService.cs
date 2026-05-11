@@ -13,8 +13,10 @@ namespace ForumService.ForumService.Application.Interfaces.Services
         Task<List<ForumUserDto>> GetJoinedForums(Guid userId, CancellationToken cancellationToken = default);
         Task<List<ForumMemberDto>> GetForumMembers(Guid forumId, CancellationToken cancellationToken = default);
         Task RemoveForumMember(Guid forumId, Guid targetUserId, Guid actingUserId);
+        Task LeaveForumAsync(Guid forumId, Guid userId);
 
         Task<List<ForumTagDto>> GetForumTagsAsync(Guid forumId, CancellationToken cancellationToken = default);
         Task<ForumTagDto> CreateForumTagAsync(Guid forumId, CreateForumTagRequest request, Guid actingUserId);
+        Task<List<ForumDto>> SearchForums(string query, CancellationToken cancellationToken = default);
     }
 }

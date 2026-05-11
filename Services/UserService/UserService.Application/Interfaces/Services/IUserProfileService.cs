@@ -9,4 +9,5 @@ public interface IUserProfileService
     Task<UserProfileDto?> GetUserById(string accountId);
     Task CreateProfile(CreateProfileRequest request);
     Task<List<UserProfileDto>> GetUsers(IEnumerable<string> accountIds);
+    Task<UserProfileDto?> UpdateProfile(string accountId, UpdateUserProfileDto request);
 }

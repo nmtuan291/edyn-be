@@ -50,6 +50,19 @@ builder.Services.AddGrpcClient<UserProfileService.UserProfileServiceClient>(opti
     return handler;
 });
 
+// Add JWT Bearer authentication for protected endpoints (logout, change-password, etc.)
+builder.Services.AddAuthentication("Bearer")
+    .AddJwtBearer("Bearer", options =>
+    {
+        options.Authority = builder.Configuration["Jwt:Authority"];
+        options.RequireHttpsMetadata = builder.Configuration.GetValue("Jwt:RequireHttpsMetadata", !builder.Environment.IsDevelopment());
+        options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+        {
+            ValidateAudience = true,
+            ValidAudience = builder.Configuration["Jwt:Audience"]
+        };
+    });
+
 var app = builder.Build();
 
 // Apply pending database migrations

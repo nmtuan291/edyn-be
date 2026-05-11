@@ -8,4 +8,7 @@ public interface INotificationRepository
     Task<List<Notification>> GetNotificationsByDateRangeAsync(string userId, DateTime from, DateTime to);
     Task<bool> UpdateNotificationAsync(Notification notification);
     Task<Notification?> GetNotificationAsync(Guid notificationId, Guid userId);
+    Task<int> MarkAllAsReadAsync(Guid userId);
+    Task<int> GetUnreadCountAsync(Guid userId);
+    Task<bool> DeleteNotificationAsync(Guid notificationId, Guid userId);
 }
