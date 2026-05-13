@@ -14,12 +14,14 @@ namespace AuthService.AuthService.API.Controllers;
 public class AccountController : ControllerBase
 {
     private readonly IAccountService _accountService;
+    private readonly IOAuthService _oauthService;
     private readonly RsaKeyProvider _rsaKeyProvider;
     private readonly IConfiguration _config;
 
-    public AccountController(IAccountService accountService, RsaKeyProvider rsaKeyProvider, IConfiguration config)
+    public AccountController(IAccountService accountService, IOAuthService oauthService, RsaKeyProvider rsaKeyProvider, IConfiguration config)
     {
         _accountService = accountService;
+        _oauthService = oauthService;
         _rsaKeyProvider = rsaKeyProvider;
         _config = config;
     }
@@ -42,6 +44,20 @@ public class AccountController : ControllerBase
             return BadRequest(result.Errors);
         
         return Ok();
+    }
+
+    [HttpPost("oauth-login")]
+    public async Task<ActionResult<LoginResponseDto>> OAuthLogin([FromBody] OAuthLoginDto dto)
+    {
+        try
+        {
+            var response = await _oauthService.OAuthLogin(dto);
+            return Ok(response);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
     }
 
     [HttpGet("verify-email")]

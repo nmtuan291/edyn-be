@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using UserService.Grpc;
 using Scalar.AspNetCore;
+using AuthService.Services.OAuth;
 using AccountService = AuthService.Services.AccountService;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -35,6 +36,12 @@ builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddSingleton<RsaKeyProvider>();
 builder.Services.AddScoped<ITokenRepository, TokenRepository>();
+builder.Services.AddScoped<IOAuthService, OAuthService>();
+builder.Services.AddHttpClient();
+
+// OAuth2 validators
+builder.Services.AddScoped<IOAuthValidator, GoogleOAuthValidator>();
+builder.Services.AddScoped<IOAuthValidator, FacebookOAuthValidator>();
 
 builder.Services.AddGrpcClient<UserProfileService.UserProfileServiceClient>(option =>
 {
