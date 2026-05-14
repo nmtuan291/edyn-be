@@ -14,9 +14,11 @@ public class UserProfileRepository : IUserProfileRepository
         _context = context;
     }
 
-    public async Task<User?> GetUserByIdAsync(string accountId)
+    public async Task<User?> GetUserByIdAsync(string identifier)
     {
-        var user = await _context.Users.SingleOrDefaultAsync(u => u.AccountId == accountId);
+        var lowerIdentifier = identifier.ToLower();
+        var user = await _context.Users.SingleOrDefaultAsync(u => 
+            u.AccountId == identifier || u.Username.ToLower() == lowerIdentifier);
         return user;
     }
 
