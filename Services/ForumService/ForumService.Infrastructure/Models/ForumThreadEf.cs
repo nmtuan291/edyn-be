@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ForumService.ForumService.Infrastructure.Models
@@ -16,6 +16,9 @@ namespace ForumService.ForumService.Infrastructure.Models
 
         [Required]
         public Guid CreatorId { get; set; }
+        
+        public string? CreatorName { get; set; }
+        public string? CreatorAvatar { get; set; }
 
         [Required]
         [StringLength(300)]

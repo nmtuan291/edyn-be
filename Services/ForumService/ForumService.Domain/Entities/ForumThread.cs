@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ForumService.ForumService.Domain.Entities
@@ -8,6 +8,8 @@ namespace ForumService.ForumService.Domain.Entities
         public Guid Id { get; set; }
         public Guid ForumId { get; set; }
         public Guid CreatorId { get; set; }
+        public string? CreatorName { get; set; }
+        public string? CreatorAvatar { get; set; }
         public string Title { get; set; }
         public bool IsPinned { get; set; }
         public ICollection<Tag> Tags { get; set; }

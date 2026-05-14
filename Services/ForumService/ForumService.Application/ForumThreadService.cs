@@ -68,7 +68,6 @@ public class ForumThreadService : IForumThreadService
       })
       .ToList();
 
-    await PopulateCreatorDetails(dtos);
     return dtos;
   }
 
@@ -184,6 +183,26 @@ public class ForumThreadService : IForumThreadService
       Tags = tags,
     };
     
+    try
+    {
+      await _retryPolicy.ExecuteAsync(async () =>
+      {
+        var request = new ProfileRequest();
+        request.Id.Add(userId.ToString());
+        var response = await _userProfileService.GetUserProfileAsync(request);
+        var profile = response.Profiles.FirstOrDefault();
+        if (profile != null)
+        {
+          newThread.CreatorName = profile.Username;
+          newThread.CreatorAvatar = profile.Avatar;
+        }
+      });
+    }
+    catch (Exception ex)
+    {
+      // Log error but continue
+    }
+    
     await _unitOfWork.ThreadRepo.InsertThreadAsync(newThread);
     await _unitOfWork.CommitAsync();
 
@@ -215,9 +234,7 @@ public class ForumThreadService : IForumThreadService
     if (thread == null)
       return null;
     
-    var dto = _mapper.Map<ForumThreadDto>(thread);
-    await PopulateCreatorDetails(new List<ForumThreadDto> { dto });
-    return dto;
+    return _mapper.Map<ForumThreadDto>(thread);
   }
   
   public async Task<ForumThreadDto?> UpdateThreadVote(Guid threadId, Guid userId, bool isDownVote)
@@ -328,7 +345,6 @@ public class ForumThreadService : IForumThreadService
     var threads = await _unitOfWork.ThreadRepo.SearchThreadsAsync(query, page, pageSize, cancellationToken);
     var totalCount = await _unitOfWork.ThreadRepo.SearchThreadsCountAsync(query, cancellationToken);
     var dtos = _mapper.Map<List<ForumThreadDto>>(threads);
-    await PopulateCreatorDetails(dtos);
 
     return new PagedResult<ForumThreadDto>
     {
@@ -337,37 +353,5 @@ public class ForumThreadService : IForumThreadService
       PageSize = pageSize,
       TotalCount = totalCount,
     };
-  }
-
-  private async Task PopulateCreatorDetails(List<ForumThreadDto> dtos)
-  {
-    var creatorIds = dtos.Where(d => d.CreatorId.HasValue).Select(d => d.CreatorId!.Value.ToString()).Distinct().ToList();
-    if (creatorIds.Count == 0) return;
-
-    Dictionary<Guid, UserDto> byId = new();
-    try
-    {
-      await _retryPolicy.ExecuteAsync(async () =>
-      {
-        var request = new ProfileRequest();
-        request.Id.AddRange(creatorIds);
-        var response = await _userProfileService.GetUserProfileAsync(request);
-        var users = _mapper.Map<List<UserDto>>(response.Profiles);
-        byId = users.ToDictionary(u => u.Id);
-      });
-    }
-    catch (Exception ex)
-    {
-      // Log error but don't fail the whole request
-    }
-
-    foreach (var dto in dtos)
-    {
-      if (dto.CreatorId.HasValue && byId.TryGetValue(dto.CreatorId.Value, out var profile))
-      {
-        dto.CreatorName = profile.Username;
-        dto.CreatorAvatar = profile.Avatar;
-      }
-    }
   }
 }
