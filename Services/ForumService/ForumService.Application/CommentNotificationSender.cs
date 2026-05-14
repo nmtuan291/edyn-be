@@ -20,8 +20,8 @@ public class CommentNotificationSender: ICommentNotificationSender
 
     public async Task SendNotification(CommentNotificationMessage message)
     {
-        string hostName = _configuration["RabbitMQ:HostName"] ?? "localhost";
-        await using var producer = await RabbitMqProducer.CreateAsync(hostName, _producerLogger);
+        string connectionString = _configuration["RabbitMQ:ConnectionString"] ?? _configuration["RabbitMQ:HostName"] ?? "localhost";
+        await using var producer = await RabbitMqProducer.CreateAsync(connectionString, _producerLogger);
         var payload = new NotificationMessageDto()
         {
             UserId = message.UserId,

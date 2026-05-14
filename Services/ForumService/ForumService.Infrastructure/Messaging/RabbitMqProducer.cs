@@ -19,9 +19,17 @@ public class RabbitMqProducer: IAsyncDisposable
         _logger = logger;
     }
 
-    public static async Task<RabbitMqProducer> CreateAsync(string hostName, ILogger<RabbitMqProducer> logger)
+    public static async Task<RabbitMqProducer> CreateAsync(string connectionString, ILogger<RabbitMqProducer> logger)
     {
-        var factory = new ConnectionFactory() { HostName = hostName };
+        var factory = new ConnectionFactory();
+        if (connectionString.StartsWith("amqp://") || connectionString.StartsWith("amqps://"))
+        {
+            factory.Uri = new Uri(connectionString);
+        }
+        else
+        {
+            factory.HostName = connectionString;
+        }
         var connection = await factory.CreateConnectionAsync();
         var channel = await connection.CreateChannelAsync();
         return new RabbitMqProducer(connection, channel, logger);
