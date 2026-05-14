@@ -23,5 +23,7 @@ namespace ForumService.ForumService.Application.DTOs
         public VoteStatus Vote { get; set; }
         public string? ForumName { get; set; }
         public string? ForumImage { get; set; }
+        public string? CreatorName { get; set; }
+        public string? CreatorAvatar { get; set; }
     }
 }
