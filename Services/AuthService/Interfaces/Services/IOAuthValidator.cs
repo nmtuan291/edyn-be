@@ -15,6 +15,11 @@ public interface IOAuthValidator
     Task ValidateTokenAsync(string token);
 
     /// <summary>
+    /// Checks if the validator has all necessary configuration to function.
+    /// </summary>
+    bool IsConfigured();
+
+    /// <summary>
     /// Fetches user information from the provider using the token.
     /// Should be called after ValidateTokenAsync succeeds.
     /// </summary>

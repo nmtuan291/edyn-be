@@ -39,6 +39,9 @@ public class OAuthService : BaseAuthService, IOAuthService
         var validator = _oauthValidators.FirstOrDefault(v => v.Provider == provider)
                         ?? throw new ArgumentException($"Unsupported OAuth2 provider: {dto.Provider}");
 
+        if (!validator.IsConfigured())
+            throw new ArgumentException($"OAuth2 provider '{dto.Provider}' is not configured on the server.");
+
         await validator.ValidateTokenAsync(dto.IdToken);
         var userInfo = await validator.GetUserInfoAsync(dto.IdToken);
 

@@ -115,3 +115,31 @@ Update `appsettings.json` in each service with your database connection strings:
   }
 }
 ```
+
+## Data Seeding
+
+You can use the provided Python script to generate sample data (Users, Forums, Threads, Comments) for testing.
+
+### Prerequisites
+
+- Python 3.x
+- All services running (Gateway at 5057, and other microservices)
+
+### Usage
+
+1. Navigate to the `scripts` directory:
+   ```bash
+   cd scripts
+   ```
+
+2. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. Run the seeder:
+   ```bash
+   python seed_data.py
+   ```
+
+The script will register users, create forums, post threads, and add comments automatically.

@@ -3,6 +3,7 @@
 /.cursor
 **/obj/
 **/bin/
+/scripts/
 
 # Secrets - development config with credentials
 **/appsettings.Development.json

@@ -35,6 +35,11 @@ public class GoogleOAuthValidator : IOAuthValidator
         }
     }
 
+    public bool IsConfigured()
+    {
+        return !string.IsNullOrEmpty(_config["OAuth:Google:ClientId"]);
+    }
+
     public async Task<OAuthUserInfo> GetUserInfoAsync(string token)
     {
         var clientId = _config["OAuth:Google:ClientId"]

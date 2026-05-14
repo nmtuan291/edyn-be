@@ -42,6 +42,12 @@ public class FacebookOAuthValidator : IOAuthValidator
             throw new ArgumentException("Facebook token does not belong to this application");
     }
 
+    public bool IsConfigured()
+    {
+        return !string.IsNullOrEmpty(_config["OAuth:Facebook:AppId"]) &&
+               !string.IsNullOrEmpty(_config["OAuth:Facebook:AppSecret"]);
+    }
+
     public async Task<OAuthUserInfo> GetUserInfoAsync(string token)
     {
         var client = _httpClientFactory.CreateClient();
