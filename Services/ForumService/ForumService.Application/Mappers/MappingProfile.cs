@@ -28,7 +28,8 @@ public class MappingProfile : Profile
         CreateMap<PollEf, Poll>();
         CreateMap<TagEf, Tag>();
         CreateMap<ThreadVoteEf, ThreadVote>();
-        CreateMap<ForumUserEf, ForumUser>();
+        CreateMap<ForumUserEf, ForumUser>()
+            .ForMember(dest => dest.Forum, opt => opt.MapFrom(src => src.ForumEf));
         CreateMap<ForumUser, ForumUserEf>();
         
         // Entities to models
