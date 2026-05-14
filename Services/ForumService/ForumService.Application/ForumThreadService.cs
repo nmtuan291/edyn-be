@@ -337,7 +337,9 @@ namespace ForumService.ForumService.Application;
         PageSize = pageSize,
         TotalCount = totalCount,
       };
-        private async Task PopulateCreatorDetails(List<ForumThreadDto> dtos)
+    }
+
+    private async Task PopulateCreatorDetails(List<ForumThreadDto> dtos)
     {
       var creatorIds = dtos.Where(d => d.CreatorId.HasValue).Select(d => d.CreatorId!.Value.ToString()).Distinct().ToList();
       if (creatorIds.Count == 0) return;
