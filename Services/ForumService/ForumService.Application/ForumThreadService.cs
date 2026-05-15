@@ -120,16 +120,18 @@ public class ForumThreadService : IForumThreadService
       comment.ThreadId, userId, ownerName, comment.Content, comment.ParentId));
 
     await _unitOfWork.CommentRepo.InsertCommentAsync(cmt);
-    await _unitOfWork.CommitAsync();
 
     var parentComment = cmt.ParentId is { } pid && pid != Guid.Empty
       ? await _unitOfWork.CommentRepo.GetParentCommentAsync(pid)
       : null;
+      
     await _commentNotificationSender.SendNotification(new CommentNotificationMessage(
       parentComment?.OwnerId.ToString() ?? "",
       parentComment?.OwnerName ?? "",
       parentComment?.Content ?? "",
       parentComment?.ThreadId.ToString() ?? ""));
+      
+    await _unitOfWork.CommitAsync();
   }
 
   public async Task DeleteComment(Guid commentId, Guid userId)

@@ -1,7 +1,6 @@
 using ForumService.ForumService.Application.DTOs;
 using ForumService.ForumService.Application.Interfaces.Services;
 using ForumService.ForumService.Application.Requests;
-using ForumService.ForumService.Infrastructure.Messaging;
 using ForumService.ForumService.Application.Interfaces.UnitOfWork;
 
 namespace ForumService.ForumService.Application;
