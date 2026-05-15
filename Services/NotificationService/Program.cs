@@ -17,7 +17,8 @@ builder.Services.AddOpenApi();
 builder.Services.AddSignalR();
 builder.Services.AddHostedService<RabbitMqConsumer>();
 
-var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() 
+    ?? ["https://edyn-fe.vercel.app", "http://localhost:5173"];
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
