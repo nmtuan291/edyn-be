@@ -72,7 +72,21 @@ public class RabbitMqConsumer: BackgroundService
                 _logger.LogInformation("RabbitMQ message received. Raw JSON: {Json}", messageJson);
 
                 var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-                var notification = JsonSerializer.Deserialize<NotificationMessageDto>(messageJson, options);
+                
+                // Debezium wraps messages in a {schema, payload} envelope — unwrap it
+                NotificationMessageDto? notification;
+                using var doc = JsonDocument.Parse(messageJson);
+                if (doc.RootElement.TryGetProperty("payload", out var payloadElement) 
+                    && payloadElement.ValueKind == JsonValueKind.Object
+                    && payloadElement.TryGetProperty("UserId", out _))
+                {
+                    notification = JsonSerializer.Deserialize<NotificationMessageDto>(payloadElement.GetRawText(), options);
+                    _logger.LogInformation("Unwrapped Debezium envelope");
+                }
+                else
+                {
+                    notification = JsonSerializer.Deserialize<NotificationMessageDto>(messageJson, options);
+                }
                 
                 _logger.LogInformation("Deserialized notification - UserId: {UserId}, Message: {Message}", 
                     notification?.UserId ?? "NULL", notification?.Message ?? "NULL");
