@@ -2,32 +2,33 @@ using ForumService.ForumService.Application.DTOs;
 using ForumService.ForumService.Application.Interfaces.Services;
 using ForumService.ForumService.Application.Requests;
 using ForumService.ForumService.Infrastructure.Messaging;
+using ForumService.ForumService.Application.Interfaces.UnitOfWork;
 
 namespace ForumService.ForumService.Application;
 
-public class CommentNotificationSender: ICommentNotificationSender
+public class CommentNotificationSender : ICommentNotificationSender
 {
-    private readonly ILogger<CommentNotificationSender> _logger;
-    private readonly ILogger<RabbitMqProducer> _producerLogger;
-    private readonly IConfiguration _configuration;
-    
-    public CommentNotificationSender(ILogger<CommentNotificationSender> logger, ILogger<RabbitMqProducer> producerLogger, IConfiguration configuration)
+    private readonly IUnitOfWork _unitOfWork;
+
+    public CommentNotificationSender(IUnitOfWork unitOfWork)
     {
-        _logger = logger;
-        _producerLogger = producerLogger;
-        _configuration = configuration;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task SendNotification(CommentNotificationMessage message)
     {
-        string connectionString = _configuration["RabbitMQ:ConnectionString"] ?? _configuration["RabbitMQ:HostName"] ?? "localhost";
-        await using var producer = await RabbitMqProducer.CreateAsync(connectionString, _producerLogger);
         var payload = new NotificationMessageDto()
         {
             UserId = message.UserId,
             Message = $"Người dùng {message.UserName} đã trả lời bình luận của bạn",
             CreatedOn = DateTime.UtcNow,
         };
-        await producer.SendAsync("notification", payload);
+
+        await _unitOfWork.OutboxRepo.AddAsync(
+            aggregateType: "Notification",
+            aggregateId: message.UserId,
+            eventType: "CommentNotification",
+            payload: payload
+        );
     }
 }

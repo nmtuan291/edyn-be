@@ -1,4 +1,4 @@
-﻿using ForumService.ForumService.Domain.Entities;
+using ForumService.ForumService.Domain.Entities;
 using ForumService.ForumService.Infrastructure.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -35,6 +35,17 @@ namespace ForumService.ForumService.Infrastructure.Data
             
             modelBuilder.Entity<PollEf>().ToTable("Poll");
             
+            modelBuilder.Entity<OutboxMessageEf>(e =>
+            {
+                e.ToTable("outbox");
+                e.HasKey(x => x.Id);
+                e.Property(x => x.AggregateType).HasColumnName("aggregate_type").HasMaxLength(255);
+                e.Property(x => x.AggregateId).HasColumnName("aggregate_id").HasMaxLength(255);
+                e.Property(x => x.EventType).HasColumnName("event_type").HasMaxLength(255);
+                e.Property(x => x.Payload).HasColumnName("payload").HasColumnType("jsonb");
+                e.Property(x => x.CreatedAt).HasColumnName("created_at");
+            });
+            
             base.OnModelCreating(modelBuilder);
         }
 
@@ -46,5 +57,6 @@ namespace ForumService.ForumService.Infrastructure.Data
         public DbSet<ForumUserEf> ForumUsers { get; set; }
         public DbSet<ThreadVoteEf> ThreadVotes { get; set; }
         public DbSet<CommentVoteEf> CommentVotes { get; set; }
+        public DbSet<OutboxMessageEf> OutboxMessages { get; set; }
     }
 }

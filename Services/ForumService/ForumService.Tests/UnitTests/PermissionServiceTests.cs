@@ -20,6 +20,7 @@ public class PermissionServiceTests
         public IThreadRepository ThreadRepo => throw new InvalidOperationException();
         public ICommentRepository CommentRepo => throw new InvalidOperationException();
         public IVoteRepository VoteRepo => throw new InvalidOperationException();
+        public IOutboxRepository OutboxRepo => throw new InvalidOperationException();
         
         public Task<int> CommitAsync() { return Task.FromResult(0); }
 

@@ -17,6 +17,7 @@ namespace ForumService.ForumService.Infrastructure.UnitOfWork
         public IForumRepository ForumRepo { get; }
         public IVoteRepository VoteRepo { get; }
         public ICommentRepository CommentRepo { get; }
+        public IOutboxRepository OutboxRepo { get; }
         
         public UnitOfWork(ForumDbContext context, IConnectionMultiplexer redis, IMapper mapper)
         {
@@ -26,6 +27,7 @@ namespace ForumService.ForumService.Infrastructure.UnitOfWork
             ForumRepo = new ForumRepository(_context, _redis, mapper);
             VoteRepo = new VoteRepository(_context, _redis, mapper);
             CommentRepo = new CommentRepository(_context, mapper);
+            OutboxRepo = new OutboxRepository(_context);
         }
 
         public async Task<int> CommitAsync()

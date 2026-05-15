@@ -8,6 +8,7 @@ namespace ForumService.ForumService.Application.Interfaces.UnitOfWork
         IThreadRepository ThreadRepo { get; }
         ICommentRepository CommentRepo { get; }
         IVoteRepository VoteRepo { get; }
+        IOutboxRepository OutboxRepo { get; }
         Task<int> CommitAsync();
     }
 }
