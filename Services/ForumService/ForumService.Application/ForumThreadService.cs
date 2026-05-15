@@ -127,7 +127,7 @@ public class ForumThreadService : IForumThreadService
       
     await _commentNotificationSender.SendNotification(new CommentNotificationMessage(
       parentComment?.OwnerId.ToString() ?? "",
-      parentComment?.OwnerName ?? "",
+      ownerName,
       parentComment?.Content ?? "",
       parentComment?.ThreadId.ToString() ?? ""));
       
