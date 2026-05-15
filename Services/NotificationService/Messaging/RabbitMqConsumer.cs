@@ -69,27 +69,43 @@ public class RabbitMqConsumer: BackgroundService
             {
                 var body = ea.Body.ToArray();
                 var messageJson = Encoding.UTF8.GetString(body);
-                var notification = JsonSerializer.Deserialize<NotificationMessageDto>(messageJson);
-                if (notification != null &&  !string.IsNullOrEmpty(notification.Message))
+                _logger.LogInformation("RabbitMQ message received. Raw JSON: {Json}", messageJson);
+
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                var notification = JsonSerializer.Deserialize<NotificationMessageDto>(messageJson, options);
+                
+                _logger.LogInformation("Deserialized notification - UserId: {UserId}, Message: {Message}", 
+                    notification?.UserId ?? "NULL", notification?.Message ?? "NULL");
+
+                if (notification != null && !string.IsNullOrEmpty(notification.Message) && !string.IsNullOrEmpty(notification.UserId))
                 {
                     await _hubContext.Clients.User(notification.UserId)
                         .SendAsync("ReceiveNotification", notification.Message);
 
-                    var newNotification = new Notification()
+                    if (Guid.TryParse(notification.UserId, out var recipientId))
                     {
-                        Id = Guid.NewGuid(),
-                        Message = notification.Message,
-                        RecipientId = Guid.Parse(notification.UserId),
-                        CreatedAt = DateTime.UtcNow,
-                        IsRead = false
-                    };
-                    await _notificationMessageService.InsertNotificationAsync(newNotification);
-                    _logger.LogInformation("Notification {NotificationId} has been received", newNotification.Id);
+                        var newNotification = new Notification()
+                        {
+                            Id = Guid.NewGuid(),
+                            Message = notification.Message,
+                            RecipientId = recipientId,
+                            CreatedAt = DateTime.UtcNow,
+                            IsRead = false
+                        };
+                        await _notificationMessageService.InsertNotificationAsync(newNotification);
+                        _logger.LogInformation("Notification {NotificationId} saved to Redis for user {UserId}", newNotification.Id, recipientId);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Invalid UserId format: {UserId}", notification.UserId);
+                    }
+                    
                     await _channel.BasicAckAsync(ea.DeliveryTag, false);
                 }
                 else
                 {
-                    _logger.LogWarning("Cannot deserialize notification message");
+                    _logger.LogWarning("Message missing required fields. UserId: '{UserId}', Message: '{Message}'", 
+                        notification?.UserId ?? "NULL", notification?.Message ?? "NULL");
                     await _channel.BasicNackAsync(ea.DeliveryTag, false, false);
                 }
             }
