@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Text;
 using AuthService.AuthService.Application.Dtos;
 using AuthService.Data;
 using AuthService.Entities;
@@ -113,11 +115,21 @@ public class OAuthService : BaseAuthService, IOAuthService
 
     /// <summary>
     /// Generate a unique username from the user's display name.
-    /// Strips non-alphanumeric chars and appends random digits to avoid collisions.
+    /// Strips diacritics (e.g. ấ → a, ễ → e) and non-ASCII chars, then appends random digits.
     /// </summary>
     private static string GenerateUsername(string name)
     {
-        var baseName = new string(name.Where(c => char.IsLetterOrDigit(c)).ToArray()).ToLowerInvariant();
+        // Normalize to NFD (decomposed form) so diacritical marks become separate characters
+        var normalized = name.Normalize(NormalizationForm.FormD);
+
+        // Strip combining diacritical marks (accents), keep only ASCII letters and digits
+        var baseName = new string(
+            normalized
+                .Where(c => CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark)
+                .Where(c => c <= 127 && char.IsLetterOrDigit(c))
+                .ToArray()
+        ).ToLowerInvariant();
+
         if (string.IsNullOrEmpty(baseName))
             baseName = "user";
 
