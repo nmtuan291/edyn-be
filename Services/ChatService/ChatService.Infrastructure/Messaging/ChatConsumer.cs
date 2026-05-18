@@ -15,7 +15,9 @@ public class ChatConsumer: IAsyncDisposable, IChatConsumer
     private readonly SemaphoreSlim _semaphore = new (1, 1);
     private Dictionary<string, IChannel>  _channels = new();
     private readonly IHubContext<ChatHub> _chatHubContext;
+    private readonly Dictionary<string, int> _userConnections = new();
     private readonly string _exchangeName = "chat.direct";
+    
 
     public ChatConsumer(RabbitMqConnectionFactory factory, IHubContext<ChatHub> chatHubContext)
     {
@@ -28,9 +30,12 @@ public class ChatConsumer: IAsyncDisposable, IChatConsumer
         await _semaphore.WaitAsync();
         try
         {
-            string queueName = $"chat.{userId}";
-            if (_channels.ContainsKey(userId))
+            if (_userConnections.ContainsKey(userId)) 
+            {
+                _userConnections[userId]++;
                 return;
+            }
+            string queueName = $"chat.{userId}";
 
             var channel = await _factory.CreateChannelAsync();
             _channels[userId] = channel;
@@ -78,6 +83,8 @@ public class ChatConsumer: IAsyncDisposable, IChatConsumer
                 autoAck: false,
                 consumer: consumer
             );
+
+            _userConnections[userId] = 1;
         }
         finally
         {
@@ -90,12 +97,18 @@ public class ChatConsumer: IAsyncDisposable, IChatConsumer
         await  _semaphore.WaitAsync();
         try
         {
-            if (!_channels.ContainsKey(userId))
+            if (!_userConnections.ContainsKey(userId))
                 return;
+            
+            _userConnections[userId]--;
+            if (_userConnections[userId] == 0) 
+            {
+                var channel = _channels[userId];
+                await channel.DisposeAsync();
+                _channels.Remove(userId);
+                _userConnections.Remove(userId);
+            }
 
-            var channel = _channels[userId];
-            await channel.DisposeAsync();
-            _channels.Remove(userId);
         }
         finally
         {
