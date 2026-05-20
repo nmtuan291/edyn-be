@@ -14,17 +14,17 @@ public class RabbitMqConsumer: BackgroundService
     private readonly IHubContext<NotificationHub> _hubContext;
     private readonly ILogger<RabbitMqConsumer> _logger;
     private readonly IConfiguration _config;
-    private readonly INotificationMessageService _notificationMessageService;
+    private readonly IServiceProvider _serviceProvider;
     private IConnection? _connection;
     private IChannel? _channel;
 
     public RabbitMqConsumer(IHubContext<NotificationHub> hubContext, ILogger<RabbitMqConsumer> logger
-        , IConfiguration config,  INotificationMessageService notificationMessageService)
+        , IConfiguration config, IServiceProvider serviceProvider)
     {
         _hubContext = hubContext;
         _logger = logger;
         _config = config;
-        _notificationMessageService = notificationMessageService;
+        _serviceProvider = serviceProvider;
     }
 
     public override async Task StartAsync(CancellationToken cancellationToken)
@@ -106,8 +106,12 @@ public class RabbitMqConsumer: BackgroundService
                             CreatedAt = DateTime.UtcNow,
                             IsRead = false
                         };
-                        await _notificationMessageService.InsertNotificationAsync(newNotification);
-                        _logger.LogInformation("Notification {NotificationId} saved to Redis for user {UserId}", newNotification.Id, recipientId);
+                        using (var scope = _serviceProvider.CreateScope())
+                        {
+                            var notificationMessageService = scope.ServiceProvider.GetRequiredService<INotificationMessageService>();
+                            await notificationMessageService.InsertNotificationAsync(newNotification);
+                        }
+                        _logger.LogInformation("Notification {NotificationId} saved to hybrid persistence for user {UserId}", newNotification.Id, recipientId);
                     }
                     else
                     {

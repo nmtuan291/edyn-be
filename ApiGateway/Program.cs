@@ -4,12 +4,14 @@ using Microsoft.IdentityModel.Tokens;
 using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
 using Scalar.AspNetCore;
+using Edyn.Telemetry;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+builder.Services.AddEdynTelemetry(builder.Configuration, "edyn-api-gateway");
 
 
 var jwtAudience = builder.Configuration["Jwt:Audience"];

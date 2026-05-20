@@ -3,7 +3,6 @@ using UserService.UserService.Application.Dtos;
 using UserService.UserService.Application.Interfaces.Repositories;
 using UserService.UserService.Application.Interfaces.Services;
 using UserService.UserService.Domain.Entities;
-
 namespace UserService.UserService.Application;
 
 public class UserProfileService : IUserProfileService

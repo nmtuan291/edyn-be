@@ -8,11 +8,11 @@ using UserService.UserService.Domain.Entities;
 using UserService.UserService.Infrastructure.Data;
 using Scalar.AspNetCore;
 using UserService.UserService.Infrastructure.Repositories;
+using Edyn.Telemetry;
+using OpenTelemetry.Trace;
 
 var builder = WebApplication.CreateBuilder(args);
-
 // Add services to the container.
-
 builder.Services.AddControllers();
 
 // Configure Kestrel for HTTP/2 cleartext (Required for gRPC on Cloud Run)
@@ -25,6 +25,10 @@ builder.WebHost.ConfigureKestrel(options =>
 });
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+builder.Services.AddEdynTelemetry(builder.Configuration, "edyn-user-service", tracing =>
+{
+    tracing.AddEntityFrameworkCoreInstrumentation();
+});
 
 
 builder.Services.AddGrpc();

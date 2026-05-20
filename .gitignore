@@ -5,5 +5,9 @@
 **/bin/
 /scripts/
 
+# Ignore local appsettings configuration
+Services/ForumService/appsettings.json
+Services/UserService/appsettings.json
+
 # Secrets - development config with credentials
 **/appsettings.Development.json

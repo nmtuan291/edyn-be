@@ -13,6 +13,8 @@ using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using StackExchange.Redis;
 using UserService.Grpc;
+using Edyn.Telemetry;
+using OpenTelemetry.Trace;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +22,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+builder.Services.AddEdynTelemetry(builder.Configuration, "edyn-forum-service", tracing =>
+{
+    tracing.AddEntityFrameworkCoreInstrumentation();
+    tracing.AddGrpcClientInstrumentation();
+    tracing.AddRedisInstrumentation();
+});
     
 // Add DbContext
 builder.Services.AddDbContext<ForumDbContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("WebApiDatabase")));

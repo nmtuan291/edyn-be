@@ -7,6 +7,10 @@ using NotificationService.Repositories;
 using StackExchange.Redis;
 using NotificationService.Services;
 using Scalar.AspNetCore;
+using Edyn.Telemetry;
+using OpenTelemetry.Trace;
+using Microsoft.EntityFrameworkCore;
+using NotificationService.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +18,11 @@ var builder = WebApplication.CreateBuilder(args);
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
+builder.Services.AddEdynTelemetry(builder.Configuration, "edyn-notification-service", tracing =>
+{
+    tracing.AddRedisInstrumentation();
+    tracing.AddEntityFrameworkCoreInstrumentation();
+});
 builder.Services.AddSignalR();
 builder.Services.AddHostedService<RabbitMqConsumer>();
 
@@ -47,7 +56,7 @@ builder.Services.AddAuthentication("Bearer")
                 var accessToken = context.Request.Query["access_token"];
                 var path = context.HttpContext.Request.Path;
                 if (!string.IsNullOrEmpty(accessToken) &&
-                    path.StartsWithSegments("/hubs/notification"))
+                     path.StartsWithSegments("/hubs/notification"))
                 {
                     context.Token = accessToken;
                 }
@@ -59,10 +68,21 @@ builder.Services.AddAuthentication("Bearer")
 builder.Services.AddSingleton<IConnectionMultiplexer>(sp => 
     ConnectionMultiplexer.Connect(builder.Configuration["Redis:ConnectionString"]));
 
-builder.Services.AddSingleton<INotificationMessageService, NotificationMessageService>();
-builder.Services.AddSingleton<INotificationRepository, NotificationRepository>();
+// DbContext
+builder.Services.AddDbContext<NotificationDbContext>(options => 
+    options.UseNpgsql(builder.Configuration.GetConnectionString("WebApiDatabase")));
+
+builder.Services.AddScoped<INotificationMessageService, NotificationMessageService>();
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 
 var app = builder.Build();
+
+// Apply pending database migrations
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<NotificationDbContext>();
+    db.Database.Migrate();
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

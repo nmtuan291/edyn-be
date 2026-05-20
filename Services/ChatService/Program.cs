@@ -10,12 +10,18 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
+using Edyn.Telemetry;
+using OpenTelemetry.Trace;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
+builder.Services.AddEdynTelemetry(builder.Configuration, "edyn-chat-service", tracing =>
+{
+    tracing.AddEntityFrameworkCoreInstrumentation();
+});
 
 // Add SignalR
 builder.Services.AddSignalR();

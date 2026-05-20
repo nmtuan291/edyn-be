@@ -6,5 +6,5 @@ public class Notification
     public required Guid RecipientId { get; set; }
     public required DateTime CreatedAt { get; set; }
     public required string Message { get; set; }
-    public bool? IsRead { get; set; }
+    public bool IsRead { get; set; } = false;
 }

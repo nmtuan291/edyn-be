@@ -13,6 +13,8 @@ using UserService.Grpc;
 using Scalar.AspNetCore;
 using AuthService.Services.OAuth;
 using AccountService = AuthService.Services.AccountService;
+using Edyn.Telemetry;
+using OpenTelemetry.Trace;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,6 +23,11 @@ builder.Services.AddControllers();
 
 // Learn more about configuring OpenAPI at https://akSa.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+builder.Services.AddEdynTelemetry(builder.Configuration, "edyn-auth-service", tracing =>
+{
+    tracing.AddEntityFrameworkCoreInstrumentation();
+    tracing.AddGrpcClientInstrumentation();
+});
 
 // Add gRPC
 builder.Services.AddGrpc();
