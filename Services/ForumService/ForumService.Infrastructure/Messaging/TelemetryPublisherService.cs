@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using System.Text.Json;
 using RabbitMQ.Client;
 
@@ -7,15 +7,12 @@ namespace ForumService.ForumService.Infrastructure.Messaging;
 public class TelemetryPublisherService : BackgroundService
 {
     private readonly BoundedChannelBuffer<TelemetryLog> _buffer;
-    private readonly CancellationToken _stoppingToken;
     private readonly RabbitMqConnectionFactory _connectionFactory;
 
-    public TelemetryPublisherService(BoundedChannelBuffer<TelemetryLog> buffer, RabbitMqConnectionFactory connectionFactory, 
-        CancellationToken stoppingToken)
+    public TelemetryPublisherService(BoundedChannelBuffer<TelemetryLog> buffer, RabbitMqConnectionFactory connectionFactory)
     {
         _buffer = buffer;
         _connectionFactory = connectionFactory;
-        _stoppingToken = stoppingToken;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)

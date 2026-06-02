@@ -15,6 +15,9 @@ using StackExchange.Redis;
 using UserService.Grpc;
 using Edyn.Telemetry;
 using OpenTelemetry.Trace;
+using RabbitMQ.Client;
+using System.Threading.Channels;
+using ForumService.ForumService.Infrastructure.Messaging;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -43,6 +46,30 @@ builder.Services.AddScoped<ICommentNotificationSender, CommentNotificationSender
 builder.Services.AddScoped<IHomeFeedService, HomeFeedService>();
 builder.Services.AddForumRolePermissionStrategies();
 builder.Services.AddScoped<IPermissionService, PermissionService>();
+
+// Messaging / RabbitMQ
+builder.Services.AddSingleton<IConnectionFactory>(sp =>
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    var hostName = config["RabbitMQ:HostName"] ?? "localhost";
+    var factory = new ConnectionFactory
+    {
+        HostName = hostName,
+        Port = config.GetValue<int>("RabbitMQ:Port", 5672),
+        UserName = config["RabbitMQ:UserName"] ?? "guest",
+        Password = config["RabbitMQ:Password"] ?? "guest",
+        VirtualHost = config["RabbitMQ:VirtualHost"] ?? "/"
+    };
+    if (config.GetValue("RabbitMQ:UseTls", false))
+    {
+        factory.Ssl = new SslOption { Enabled = true, ServerName = hostName };
+    }
+    return factory;
+});
+builder.Services.AddSingleton<RabbitMqConnectionFactory>();
+builder.Services.AddSingleton(new BoundedChannelOptions(1000) { FullMode = BoundedChannelFullMode.DropWrite });
+builder.Services.AddSingleton<BoundedChannelBuffer<TelemetryLog>, TelemetryBuffer>();
+builder.Services.AddHostedService<TelemetryPublisherService>();
 
 builder.Services.AddAuthentication("Bearer")
     .AddJwtBearer("Bearer", options =>

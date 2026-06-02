@@ -84,6 +84,7 @@ services:
       - Jwt__Authority=http://authservice:8080
       - Jwt__Audience=edyn_forum
       - Jwt__RequireHttpsMetadata=false
+      - Redis__ConnectionString=${REDIS_CONNECTION}
       - RabbitMQ__HostName=${RABBITMQ_HOST}
       - RabbitMQ__Port=${RABBITMQ_PORT}
       - RabbitMQ__UserName=${RABBITMQ_USER}
