@@ -11,6 +11,8 @@ services:
       - Jwt__Authority=http://authservice:8080
       - Jwt__Issuer=${JWT_ISSUER}
       - Jwt__RequireHttpsMetadata=false
+      - Cors__AllowedOrigins__0=${FRONTEND_URL}
+      - Cors__AllowedOrigins__1=http://localhost:5173
       - Gateway__Downstream__User__Host=userservice
       - Gateway__Downstream__User__Port=8080
       - Gateway__Downstream__User__Scheme=http
@@ -100,6 +102,8 @@ services:
       - Jwt__Authority=http://authservice:8080
       - Jwt__Audience=edyn_chat
       - Jwt__RequireHttpsMetadata=false
+      - Cors__AllowedOrigins__0=${FRONTEND_URL}
+      - Cors__AllowedOrigins__1=http://localhost:5173
       - Redis__ConnectionString=${REDIS_CONNECTION}
       - RabbitMQ__HostName=${RABBITMQ_HOST}
       - RabbitMQ__Port=${RABBITMQ_PORT}
@@ -122,6 +126,8 @@ services:
       - Jwt__Authority=http://authservice:8080
       - Jwt__Audience=edyn_notification
       - Jwt__RequireHttpsMetadata=false
+      - Cors__AllowedOrigins__0=${FRONTEND_URL}
+      - Cors__AllowedOrigins__1=http://localhost:5173
       - Redis__ConnectionString=${REDIS_CONNECTION}
       - RabbitMQ__HostName=${RABBITMQ_HOST}
       - RabbitMQ__Port=${RABBITMQ_PORT}
@@ -130,3 +136,4 @@ services:
       - RabbitMQ__VirtualHost=${RABBITMQ_VHOST}
       - RabbitMQ__UseTls=true
     restart: unless-stopped
+
