@@ -80,9 +80,11 @@ services:
       - Jwt__Audience=edyn_forum
       - Jwt__RequireHttpsMetadata=false
       - RabbitMQ__HostName=${RABBITMQ_HOST}
-      - RabbitMQ__Port=5672
-      - RabbitMQ__UserName=guest
-      - RabbitMQ__Password=guest
+      - RabbitMQ__Port=${RABBITMQ_PORT}
+      - RabbitMQ__UserName=${RABBITMQ_USER}
+      - RabbitMQ__Password=${RABBITMQ_PASSWORD}
+      - RabbitMQ__VirtualHost=${RABBITMQ_VHOST}
+      - RabbitMQ__UseTls=true
     restart: unless-stopped
 
   chatservice:
@@ -98,11 +100,13 @@ services:
       - Jwt__Authority=http://authservice:8080
       - Jwt__Audience=edyn_chat
       - Jwt__RequireHttpsMetadata=false
-      - Redis__ConnectionString=${REDIS_HOST}:6379
+      - Redis__ConnectionString=${REDIS_CONNECTION}
       - RabbitMQ__HostName=${RABBITMQ_HOST}
-      - RabbitMQ__Port=5672
-      - RabbitMQ__UserName=guest
-      - RabbitMQ__Password=guest
+      - RabbitMQ__Port=${RABBITMQ_PORT}
+      - RabbitMQ__UserName=${RABBITMQ_USER}
+      - RabbitMQ__Password=${RABBITMQ_PASSWORD}
+      - RabbitMQ__VirtualHost=${RABBITMQ_VHOST}
+      - RabbitMQ__UseTls=true
     restart: unless-stopped
 
   notificationservice:
@@ -118,9 +122,11 @@ services:
       - Jwt__Authority=http://authservice:8080
       - Jwt__Audience=edyn_notification
       - Jwt__RequireHttpsMetadata=false
-      - Redis__ConnectionString=${REDIS_HOST}:6379
+      - Redis__ConnectionString=${REDIS_CONNECTION}
       - RabbitMQ__HostName=${RABBITMQ_HOST}
-      - RabbitMQ__Port=5672
-      - RabbitMQ__UserName=guest
-      - RabbitMQ__Password=guest
+      - RabbitMQ__Port=${RABBITMQ_PORT}
+      - RabbitMQ__UserName=${RABBITMQ_USER}
+      - RabbitMQ__Password=${RABBITMQ_PASSWORD}
+      - RabbitMQ__VirtualHost=${RABBITMQ_VHOST}
+      - RabbitMQ__UseTls=true
     restart: unless-stopped
