@@ -8,6 +8,9 @@ services:
       - "5057:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
+      - Jwt__Authority=http://authservice:8080
+      - Jwt__Issuer=${JWT_ISSUER}
+      - Jwt__RequireHttpsMetadata=false
       - Gateway__Downstream__User__Host=userservice
       - Gateway__Downstream__User__Port=8080
       - Gateway__Downstream__User__Scheme=http
@@ -41,9 +44,11 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - Grpc__UserServiceUrl=http://userservice:8080
-      - ConnectionStrings__WebApiDatabase=Host=${DB_HOST};Database=edyn_authdb;Username=postgres;Password=${DB_PASSWORD}
+      - ConnectionStrings__WebApiDatabase=${AUTH_DB_CONNECTION}
       - Jwt__Authority=http://authservice:8080
+      - Jwt__Issuer=${JWT_ISSUER}
       - Jwt__Audience=edyn_auth
+      - Jwt__RequireHttpsMetadata=false
     restart: unless-stopped
 
   userservice:
@@ -55,9 +60,10 @@ services:
       - "5161:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__WebApiDatabase=Host=${DB_HOST};Database=edyn_userdb;Username=postgres;Password=${DB_PASSWORD}
+      - ConnectionStrings__WebApiDatabase=${USER_DB_CONNECTION}
       - Jwt__Authority=http://authservice:8080
       - Jwt__Audience=edyn_user
+      - Jwt__RequireHttpsMetadata=false
     restart: unless-stopped
 
   forumservice:
@@ -69,9 +75,10 @@ services:
       - "5220:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__WebApiDatabase=Host=${DB_HOST};Database=edyn_forumdb;Username=postgres;Password=${DB_PASSWORD}
+      - ConnectionStrings__WebApiDatabase=${FORUM_DB_CONNECTION}
       - Jwt__Authority=http://authservice:8080
       - Jwt__Audience=edyn_forum
+      - Jwt__RequireHttpsMetadata=false
       - RabbitMQ__HostName=${RABBITMQ_HOST}
       - RabbitMQ__Port=5672
       - RabbitMQ__UserName=guest
@@ -87,9 +94,10 @@ services:
       - "5033:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__WebApiDatabase=Host=${DB_HOST};Database=edyn_chatdb;Username=postgres;Password=${DB_PASSWORD}
+      - ConnectionStrings__WebApiDatabase=${CHAT_DB_CONNECTION}
       - Jwt__Authority=http://authservice:8080
       - Jwt__Audience=edyn_chat
+      - Jwt__RequireHttpsMetadata=false
       - Redis__ConnectionString=${REDIS_HOST}:6379
       - RabbitMQ__HostName=${RABBITMQ_HOST}
       - RabbitMQ__Port=5672
@@ -106,9 +114,10 @@ services:
       - "5190:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__WebApiDatabase=Host=${DB_HOST};Database=edyn_notificationdb;Username=postgres;Password=${DB_PASSWORD}
+      - ConnectionStrings__WebApiDatabase=${NOTIFICATION_DB_CONNECTION}
       - Jwt__Authority=http://authservice:8080
       - Jwt__Audience=edyn_notification
+      - Jwt__RequireHttpsMetadata=false
       - Redis__ConnectionString=${REDIS_HOST}:6379
       - RabbitMQ__HostName=${RABBITMQ_HOST}
       - RabbitMQ__Port=5672
