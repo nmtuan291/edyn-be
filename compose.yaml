@@ -1,13 +1,117 @@
-﻿services:
+services:
+  apigateway:
+    image: edyn-apigateway
+    build:
+      context: .
+      dockerfile: ApiGateway/Dockerfile
+    ports:
+      - "5057:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - Gateway__Downstream__User__Host=userservice
+      - Gateway__Downstream__User__Port=8080
+      - Gateway__Downstream__User__Scheme=http
+      - Gateway__Downstream__Forum__Host=forumservice
+      - Gateway__Downstream__Forum__Port=8080
+      - Gateway__Downstream__Forum__Scheme=http
+      - Gateway__Downstream__Auth__Host=authservice
+      - Gateway__Downstream__Auth__Port=8080
+      - Gateway__Downstream__Auth__Scheme=http
+      - Gateway__Downstream__Notification__Host=notificationservice
+      - Gateway__Downstream__Notification__Port=8080
+      - Gateway__Downstream__Notification__Scheme=http
+      - Gateway__Downstream__Chat__Host=chatservice
+      - Gateway__Downstream__Chat__Port=8080
+      - Gateway__Downstream__Chat__Scheme=http
+    restart: unless-stopped
+    depends_on:
+      - authservice
+      - userservice
+      - forumservice
+      - chatservice
+      - notificationservice
+
+  authservice:
+    image: edyn-authservice
+    build:
+      context: .
+      dockerfile: Services/AuthService/Dockerfile
+    ports:
+      - "5299:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - Grpc__UserServiceUrl=http://userservice:8080
+      - ConnectionStrings__WebApiDatabase=Host=${DB_HOST};Database=edyn_authdb;Username=postgres;Password=${DB_PASSWORD}
+      - Jwt__Authority=http://authservice:8080
+      - Jwt__Audience=edyn_auth
+    restart: unless-stopped
+
+  userservice:
+    image: edyn-userservice
+    build:
+      context: .
+      dockerfile: Services/UserService/Dockerfile
+    ports:
+      - "5161:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__WebApiDatabase=Host=${DB_HOST};Database=edyn_userdb;Username=postgres;Password=${DB_PASSWORD}
+      - Jwt__Authority=http://authservice:8080
+      - Jwt__Audience=edyn_user
+    restart: unless-stopped
+
+  forumservice:
+    image: edyn-forumservice
+    build:
+      context: .
+      dockerfile: Services/ForumService/Dockerfile
+    ports:
+      - "5220:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__WebApiDatabase=Host=${DB_HOST};Database=edyn_forumdb;Username=postgres;Password=${DB_PASSWORD}
+      - Jwt__Authority=http://authservice:8080
+      - Jwt__Audience=edyn_forum
+      - RabbitMQ__HostName=${RABBITMQ_HOST}
+      - RabbitMQ__Port=5672
+      - RabbitMQ__UserName=guest
+      - RabbitMQ__Password=guest
+    restart: unless-stopped
+
   chatservice:
-    image: chatservice
+    image: edyn-chatservice
     build:
       context: .
       dockerfile: Services/ChatService/Dockerfile
+    ports:
+      - "5033:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__WebApiDatabase=Host=${DB_HOST};Database=edyn_chatdb;Username=postgres;Password=${DB_PASSWORD}
+      - Jwt__Authority=http://authservice:8080
+      - Jwt__Audience=edyn_chat
+      - Redis__ConnectionString=${REDIS_HOST}:6379
+      - RabbitMQ__HostName=${RABBITMQ_HOST}
+      - RabbitMQ__Port=5672
+      - RabbitMQ__UserName=guest
+      - RabbitMQ__Password=guest
+    restart: unless-stopped
 
-  signalrservice:
-    image: signalrservice
+  notificationservice:
+    image: edyn-notificationservice
     build:
       context: .
-      dockerfile: SignalRService/Dockerfile
-
+      dockerfile: Services/NotificationService/Dockerfile
+    ports:
+      - "5190:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__WebApiDatabase=Host=${DB_HOST};Database=edyn_notificationdb;Username=postgres;Password=${DB_PASSWORD}
+      - Jwt__Authority=http://authservice:8080
+      - Jwt__Audience=edyn_notification
+      - Redis__ConnectionString=${REDIS_HOST}:6379
+      - RabbitMQ__HostName=${RABBITMQ_HOST}
+      - RabbitMQ__Port=5672
+      - RabbitMQ__UserName=guest
+      - RabbitMQ__Password=guest
+    restart: unless-stopped
