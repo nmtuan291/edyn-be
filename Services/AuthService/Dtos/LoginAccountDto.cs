@@ -10,5 +10,5 @@ public record LoginAccountDto
     [Required]
     public required string Password { get; init; }
     
-    public required bool IsEmail { get; init; }
+    public bool IsEmail { get; init; }
 }
