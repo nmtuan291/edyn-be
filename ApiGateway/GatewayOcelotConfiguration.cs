@@ -16,6 +16,7 @@ public static class GatewayOcelotConfiguration
         ("/forum", "Forum"),
         ("/feed", "Forum"),
         ("/auth", "Auth"),
+        ("/.well-known", "Auth"),
         ("/notifications", "Notification"),
         ("/chat", "Chat"),
     ];

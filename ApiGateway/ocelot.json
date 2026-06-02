@@ -58,6 +58,15 @@
       "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE", "OPTIONS" ]
     },
     {
+      "DownstreamPathTemplate": "/.well-known/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "localhost", "Port": 5299 }
+      ],
+      "UpstreamPathTemplate": "/.well-known/{everything}",
+      "UpstreamHttpMethod": [ "GET", "OPTIONS" ]
+    },
+    {
       "DownstreamPathTemplate": "/hubs/notification/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
