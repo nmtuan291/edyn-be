@@ -25,7 +25,8 @@ public class AccountService : BaseAuthService, IAccountService
     
     public async Task<LoginResponseDto?> Login(LoginAccountDto account)
     {
-        var user = account.IsEmail ? 
+        bool isEmail = account.IsEmail || (account.Username != null && account.Username.Contains("@"));
+        var user = isEmail ? 
             await UserManager.FindByEmailAsync(account.Username) :
             await UserManager.FindByNameAsync(account.Username);
 
