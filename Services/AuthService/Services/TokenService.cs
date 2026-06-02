@@ -27,7 +27,9 @@ public class TokenService : ITokenService
             new Claim(JwtRegisteredClaimNames.Name, request.Username),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
         };
+        
         var creds = new SigningCredentials(request.PrivateKey, SecurityAlgorithms.RsaSha256);
+        
         var token = new JwtSecurityToken(
             issuer: _config["Jwt:Issuer"],
             audience: _config["Jwt:Audience"],

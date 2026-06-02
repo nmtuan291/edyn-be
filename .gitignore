@@ -4,10 +4,17 @@
 **/obj/
 **/bin/
 /scripts/
+/Benchmarks/
+/.agents/
+/.antigravitycli/
+/.agent/
+/.idea/
 
 # Ignore local appsettings configuration
 Services/ForumService/appsettings.json
 Services/UserService/appsettings.json
+Services/NotificationService/appsettings.json
+Services/ChatService/appsettings.json
 
 # Secrets - development config with credentials
 **/appsettings.Development.json

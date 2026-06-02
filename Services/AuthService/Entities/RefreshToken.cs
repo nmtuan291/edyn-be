@@ -12,6 +12,18 @@ public class RefreshToken
     public bool Revoked { get; set; }
     public Account Account { get; set; }
 
+    private RefreshToken() { }
+
+    private RefreshToken(string accountId, int durationInDays, string token)
+    {
+        Id = Guid.NewGuid();
+        Token = token;
+        AccountId = accountId;
+        Expires = DateTime.UtcNow.AddDays(durationInDays);
+        Created = DateTime.UtcNow;
+        Revoked = false;
+    }
+
     public bool IsActive()
     {
         return Expires >= DateTime.UtcNow;
@@ -19,23 +31,12 @@ public class RefreshToken
 
     public static RefreshToken GenerateRefreshToken(string accountId, int durationInDays)
     {
-        var randomNumber = new byte[64];
-        using (var rng = RandomNumberGenerator.Create())
-        {
-            rng.GetBytes(randomNumber);
-        }
-
-        RefreshToken token = new()
-        {
-            Id = Guid.NewGuid(),
-            Token = Convert.ToBase64String(randomNumber),
-            AccountId = accountId,
-            Expires = DateTime.UtcNow.AddDays(durationInDays),
-            Created = DateTime.UtcNow,
-            Revoked = false
-        };
+        Span<byte> randomNumber = stackalloc byte[64];
+        RandomNumberGenerator.Fill(randomNumber);
         
-        return token;
+        string tokenString = Convert.ToBase64String(randomNumber);
+
+        return new RefreshToken(accountId, durationInDays, tokenString);
     }
 
     public void UpdateRefreshToken(RefreshToken token)
