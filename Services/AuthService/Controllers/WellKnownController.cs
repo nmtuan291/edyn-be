@@ -40,9 +40,12 @@ public class WellKnownController : ControllerBase
     public IActionResult Oidc()
     {
         var issuer = _config["Jwt:Issuer"];
+        var request = HttpContext.Request;
+        var host = request.Host.Value;
+        var scheme = request.Scheme;
         return Ok(new {
             issuer,
-            jwks_uri = $"{issuer}/.well-known/jwks.json"
+            jwks_uri = $"{scheme}://{host}/.well-known/jwks.json"
         });
     }
 }

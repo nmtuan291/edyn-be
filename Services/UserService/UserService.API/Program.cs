@@ -15,14 +15,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllers();
 
-// Configure Kestrel for HTTP/2 cleartext (Required for gRPC on Cloud Run)
-builder.WebHost.ConfigureKestrel(options =>
-{
-    options.ConfigureEndpointDefaults(listenOptions =>
-    {
-        listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1AndHttp2;
-    });
-});
+
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 builder.Services.AddEdynTelemetry(builder.Configuration, "edyn-user-service", tracing =>
@@ -46,8 +39,8 @@ builder.Services.AddAuthentication("Bearer")
         options.RequireHttpsMetadata = builder.Configuration.GetValue("Jwt:RequireHttpsMetadata", !builder.Environment.IsDevelopment());
         options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
         {
-            ValidateAudience = true,
-            ValidAudience = builder.Configuration["Jwt:Audience"]
+            ValidateAudience = false,
+            ValidateIssuer = false
         };
     });
 

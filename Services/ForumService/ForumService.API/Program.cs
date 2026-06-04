@@ -78,8 +78,8 @@ builder.Services.AddAuthentication("Bearer")
         options.RequireHttpsMetadata = builder.Configuration.GetValue("Jwt:RequireHttpsMetadata", !builder.Environment.IsDevelopment());
         options.TokenValidationParameters = new TokenValidationParameters
         {
-            ValidateAudience = true,
-            ValidAudience = builder.Configuration["Jwt:Audience"] 
+            ValidateAudience = false,
+            ValidateIssuer = false
         };
     });
 

@@ -18,5 +18,6 @@ namespace ForumService.ForumService.Application.Interfaces.Services
         Task DeleteComment(Guid commentId, Guid userId);
         Task<PagedResult<ForumThreadDto>> GetThreadsByForumIdPaged(ForumThreadListQuery query, CancellationToken cancellationToken = default);
         Task<PagedResult<ForumThreadDto>> SearchThreads(string query, int page, int pageSize, CancellationToken cancellationToken = default);
+        Task<ForumThreadDto?> VotePoll(Guid threadId, string pollContent);
     }
 }

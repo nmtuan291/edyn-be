@@ -356,4 +356,21 @@ public class ForumThreadService : IForumThreadService
       TotalCount = totalCount,
     };
   }
+
+  public async Task<ForumThreadDto?> VotePoll(Guid threadId, string pollContent)
+  {
+    var thread = await _unitOfWork.ThreadRepo.GetThreadByIdAsync(threadId);
+    if (thread == null)
+      return null;
+
+    var pollItem = thread.PollItems?.FirstOrDefault(p => p.PollContent == pollContent);
+    if (pollItem == null)
+      return null;
+
+    pollItem.VoteCount++;
+    _unitOfWork.ThreadRepo.UpdateThread(thread);
+    await _unitOfWork.CommitAsync();
+
+    return _mapper.Map<ForumThreadDto>(thread);
+  }
 }

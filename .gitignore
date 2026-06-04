@@ -18,4 +18,5 @@ Services/ChatService/appsettings.json
 
 # Secrets - development config with credentials
 **/appsettings.Development.json
+.env.*
 .env

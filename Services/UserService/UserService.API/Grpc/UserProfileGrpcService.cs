@@ -26,10 +26,10 @@ public class UserProfileGrpcService : UserProfileService.UserProfileServiceBase
         var response = new ProfilesResponse();
         response.Profiles.AddRange(profiles.Select(u => new ProfileResponse
         {
-            Id = u.AccountId,
-            Username = u.UserName,
-            Avatar = u.Avatar,
-            Bio = u.Bio,
+            Id = u.AccountId ?? "",
+            Username = u.UserName ?? "",
+            Avatar = u.Avatar ?? "",
+            Bio = u.Bio ?? "",
             BirthDay = u.Birthday != DateTime.MinValue 
                 ? Timestamp.FromDateTime(DateTime.SpecifyKind(u.Birthday.GetValueOrDefault(), DateTimeKind.Utc))
                 : Timestamp.FromDateTime(DateTime.SpecifyKind(DateTime.MinValue, DateTimeKind.Utc)),

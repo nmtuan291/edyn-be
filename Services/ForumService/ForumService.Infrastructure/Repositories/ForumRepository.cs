@@ -39,8 +39,8 @@ namespace ForumService.ForumService.Infrastructure.Repositories
         {
             var forum = await _context.Forums
                 .AsNoTracking()
-                .Where(f => f.Name.ToLower() == name.ToLower())
-                .SingleOrDefaultAsync(cancellationToken);
+                .Where(f => f.Name.ToLower() == name.ToLower() || f.ShortName.ToLower() == name.ToLower())
+                .FirstOrDefaultAsync(cancellationToken);
 
             return _mapper.Map<Forum>(forum);
         }

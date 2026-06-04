@@ -210,5 +210,22 @@ namespace ForumService.ForumService.API.Controllers
             await _forumThreadService.DeleteComment(commentId, Guid.Parse(userId));
             return Ok();
         }
+
+        [Authorize]
+        [HttpPost("thread/poll-vote")]
+        public async Task<ActionResult<ForumThreadDto?>> VotePoll([FromBody] PollVoteRequest request)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            if (request.ThreadId == Guid.Empty || string.IsNullOrWhiteSpace(request.PollContent))
+                return BadRequest("ThreadId and PollContent are required.");
+
+            var result = await _forumThreadService.VotePoll(request.ThreadId, request.PollContent);
+            if (result == null)
+                return NotFound("Thread or poll item not found.");
+            return Ok(result);
+        }
     }
 }
