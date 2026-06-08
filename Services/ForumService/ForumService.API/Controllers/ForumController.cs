@@ -95,10 +95,13 @@ namespace ForumService.ForumService.API.Controllers
         [HttpGet("{forumName}")]
         public async Task<ActionResult<ForumDto>> GetForum(string forumName, CancellationToken cancellationToken)
         {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            Guid.TryParse(userId,  out var parsedUserId);
+            
             if (string.IsNullOrEmpty(forumName))
                 return BadRequest("Invalid forum name");
 
-            ForumDto? forum = await _forumService.GetForum(forumName, cancellationToken);
+            ForumDto? forum = await _forumService.GetForum(parsedUserId, forumName, cancellationToken);
             return forum == null ? NotFound() : forum;
         }
 
@@ -172,6 +175,21 @@ namespace ForumService.ForumService.API.Controllers
                 return Unauthorized();
 
             var forums = await _forumService.GetJoinedForums(Guid.Parse(userId), cancellationToken);
+            return forums;
+        }
+
+        [Authorize]
+        [HttpGet("recent")]
+        public async Task<ActionResult<List<ForumDto>>> GetRecentForums(CancellationToken cancellationToken)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            
+            if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var parsedUserId))
+            {
+                return Unauthorized();
+            }
+            
+            var forums = await _forumService.GetRecentVisitForums(parsedUserId, cancellationToken);
             return forums;
         }
 

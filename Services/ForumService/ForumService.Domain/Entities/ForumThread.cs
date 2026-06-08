@@ -21,6 +21,7 @@ namespace ForumService.ForumService.Domain.Entities
         public DateTime CreatedAt { get; set; }
         public DateTime LastUpdatedAt { get; set; }
         public ICollection<ThreadVote> Votes { get; set; } = new List<ThreadVote>();
+        public ICollection<PollVote> PollVotes { get; set; } = new List<PollVote>();
         
         public bool Vote(Guid userId, bool isDownVote)
         {
@@ -55,6 +56,49 @@ namespace ForumService.ForumService.Domain.Entities
             Upvote = upVote -  downVote;
             
             return voteExists;
+        }
+
+        public bool VotePoll(Guid userId, string pollContent)
+        {
+            if (PollItems == null) return false;
+
+            var existingVote = PollVotes.FirstOrDefault(v => v.UserId == userId);
+
+            if (existingVote != null)
+            {
+                if (existingVote.PollContent == pollContent)
+                {
+                    // Unselect if clicking the same option
+                    PollVotes.Remove(existingVote);
+                    var option = PollItems.FirstOrDefault(p => p.PollContent == pollContent);
+                    if (option != null) option.VoteCount--;
+                }
+                else
+                {
+                    // Change option
+                    var oldOption = PollItems.FirstOrDefault(p => p.PollContent == existingVote.PollContent);
+                    if (oldOption != null) oldOption.VoteCount--;
+
+                    existingVote.PollContent = pollContent;
+                    
+                    var newOption = PollItems.FirstOrDefault(p => p.PollContent == pollContent);
+                    if (newOption != null) newOption.VoteCount++;
+                }
+            }
+            else
+            {
+                // New vote
+                PollVotes.Add(new PollVote
+                {
+                    UserId = userId,
+                    ThreadId = Id,
+                    PollContent = pollContent
+                });
+                var newOption = PollItems.FirstOrDefault(p => p.PollContent == pollContent);
+                if (newOption != null) newOption.VoteCount++;
+            }
+
+            return true;
         }
     }
 }

@@ -230,13 +230,21 @@ public class ForumThreadService : IForumThreadService
       .ToList();
   }
 
-  public async Task<ForumThreadDto?> GetThreadById(Guid threadId, CancellationToken cancellationToken = default)
+  public async Task<ForumThreadDto?> GetThreadById(Guid threadId, string? userId, CancellationToken cancellationToken = default)
   {
-    var thread = await _unitOfWork.ThreadRepo.GetThreadByIdAsync(threadId, cancellationToken);
+    var parsedUserId =  Guid.TryParse(userId, out var userIdGuid) ? userIdGuid : Guid.Empty;
+    
+    var thread = await _unitOfWork.ThreadRepo.GetThreadByIdAsync(threadId, parsedUserId, cancellationToken);
     if (thread == null)
       return null;
     
-    return _mapper.Map<ForumThreadDto>(thread);
+    var dto = _mapper.Map<ForumThreadDto>(thread);
+    if (!string.IsNullOrEmpty(userId) && Guid.TryParse(userId, out var userGuid))
+    {
+        dto.UserPollVote = thread.PollVotes?.FirstOrDefault(v => v.UserId == userGuid)?.PollContent;
+    }
+    
+    return dto;
   }
   
   public async Task<ForumThreadDto?> UpdateThreadVote(Guid threadId, Guid userId, bool isDownVote)
@@ -357,20 +365,28 @@ public class ForumThreadService : IForumThreadService
     };
   }
 
-  public async Task<ForumThreadDto?> VotePoll(Guid threadId, string pollContent)
+  public async Task<ForumThreadDto?> VotePoll(Guid userId, Guid threadId, string pollContent)
   {
-    var thread = await _unitOfWork.ThreadRepo.GetThreadByIdAsync(threadId);
+    var thread = await _unitOfWork.ThreadRepo.VotePollAsync(userId, threadId, pollContent);
     if (thread == null)
       return null;
 
-    var pollItem = thread.PollItems?.FirstOrDefault(p => p.PollContent == pollContent);
-    if (pollItem == null)
-      return null;
-
-    pollItem.VoteCount++;
-    _unitOfWork.ThreadRepo.UpdateThread(thread);
     await _unitOfWork.CommitAsync();
 
-    return _mapper.Map<ForumThreadDto>(thread);
+    var dto = _mapper.Map<ForumThreadDto>(thread);
+    dto.UserPollVote = thread.PollVotes?.FirstOrDefault(v => v.UserId == userId)?.PollContent;
+    return dto;
+  }
+
+  public async Task<PagedResult<UserCommentDto>> GetUserComments(Guid userId, int page, int pageSize,
+    string? currentUserId, CancellationToken cancellationToken = default)
+  {
+    return new PagedResult<UserCommentDto>()
+    {
+      Items = [],
+      Page = page,
+      PageSize = pageSize,
+      TotalCount = 1
+    };
   }
 }

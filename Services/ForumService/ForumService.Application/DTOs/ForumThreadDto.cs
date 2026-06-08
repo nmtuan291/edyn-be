@@ -40,6 +40,7 @@ namespace ForumService.ForumService.Application.DTOs
         public  DateTime? CreatedAt { get; init; }
         public DateTime? LastUpdatedAt { get; init; }
         public VoteStatus Vote { get; set; }
+        public string? UserPollVote { get; set; }
         public string? ForumName { get; set; }
         public string? ForumImage { get; set; }
         public string? CreatorName { get; set; }

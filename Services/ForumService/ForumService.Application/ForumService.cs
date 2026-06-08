@@ -38,9 +38,9 @@ namespace ForumService.ForumService.Application
                 .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)));
         }
 
-        public async Task<ForumDto?> GetForum(string forumName, CancellationToken cancellationToken = default)
+        public async Task<ForumDto?> GetForum(Guid userId, string forumName, CancellationToken cancellationToken = default)
         {
-            Forum? forum = await _unitOfWork.ForumRepo.GetForumByNameAsync(forumName, cancellationToken);
+            Forum? forum = await _unitOfWork.ForumRepo.GetForumByNameAsync(userId, forumName, cancellationToken);
             if (forum == null)
                 return null;
 
@@ -265,6 +265,13 @@ namespace ForumService.ForumService.Application
         public async Task<List<ForumDto>> SearchForums(string query, CancellationToken cancellationToken = default)
         {
             var forums = await _unitOfWork.ForumRepo.SearchForumsAsync(query, cancellationToken);
+            return _mapper.Map<List<ForumDto>>(forums);
+        }
+
+        public async ValueTask<List<ForumDto>> GetRecentVisitForums(Guid userId,
+            CancellationToken cancellationToken = default)
+        {
+            var forums = await _unitOfWork.ForumRepo.GetRecentVisitForumsAsync(userId, cancellationToken);
             return _mapper.Map<List<ForumDto>>(forums);
         }
     }

@@ -10,7 +10,7 @@ namespace ForumService.ForumService.Application.Interfaces.Services
         Task InsertComment(CommentDto comment, Guid userId, string username);
         Task<ForumThreadDto> CreateForumThread(ForumThreadDto forumThread, Guid userId);
         Task<ForumThreadDto?> UpdateThreadVote(Guid threadId, Guid userId, bool isDownVote = false);
-        Task<ForumThreadDto?> GetThreadById(Guid threadId, CancellationToken cancellationToken = default);
+        Task<ForumThreadDto?> GetThreadById(Guid threadId, string? userId, CancellationToken cancellationToken = default);
         Task<CommentDto?> UpdateCommentVote(Guid commentId, Guid userId, bool isDownVote);
         Task<ForumThreadDto?> EditThread(Guid threadId, Guid userId, EditThreadRequest request);
         Task<CommentDto?> EditComment(Guid commentId, Guid userId, EditCommentRequest request);
@@ -18,6 +18,7 @@ namespace ForumService.ForumService.Application.Interfaces.Services
         Task DeleteComment(Guid commentId, Guid userId);
         Task<PagedResult<ForumThreadDto>> GetThreadsByForumIdPaged(ForumThreadListQuery query, CancellationToken cancellationToken = default);
         Task<PagedResult<ForumThreadDto>> SearchThreads(string query, int page, int pageSize, CancellationToken cancellationToken = default);
-        Task<ForumThreadDto?> VotePoll(Guid threadId, string pollContent);
+        Task<ForumThreadDto?> VotePoll(Guid userId, Guid threadId, string pollContent);
+        Task<PagedResult<UserCommentDto>> GetUserComments(Guid userId, int page, int pageSize, string? currentUserId, CancellationToken cancellationToken = default);
     }
 }

@@ -19,6 +19,8 @@ namespace ForumService.ForumService.Infrastructure.Data
                 .HasKey(t => new { t.UserId, t.ForumId });
             modelBuilder.Entity<PollEf>()
                 .HasKey(p => new { p.ThreadId, p.PollContent });
+            modelBuilder.Entity<PollVoteEf>()
+                .HasKey(p => new { p.UserId, p.ThreadId });
             modelBuilder.Entity<ForumEf>()
                 .HasIndex(f => f.Name)
                 .IsUnique();
@@ -57,6 +59,7 @@ namespace ForumService.ForumService.Infrastructure.Data
         public DbSet<ForumUserEf> ForumUsers { get; set; }
         public DbSet<ThreadVoteEf> ThreadVotes { get; set; }
         public DbSet<CommentVoteEf> CommentVotes { get; set; }
+        public DbSet<PollVoteEf> PollVotes { get; set; }
         public DbSet<OutboxMessageEf> OutboxMessages { get; set; }
     }
 }

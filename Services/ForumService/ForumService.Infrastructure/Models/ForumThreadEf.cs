@@ -48,7 +48,8 @@ namespace ForumService.ForumService.Infrastructure.Models
 
         [Required]
         public DateTime LastUpdatedAt { get; set; }
-        
         public ICollection<ThreadVoteEf> Votes { get; set; }
+        
+        public ICollection<PollVoteEf> PollVotes { get; set; }
     }
 }

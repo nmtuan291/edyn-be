@@ -18,6 +18,7 @@ using OpenTelemetry.Trace;
 using RabbitMQ.Client;
 using System.Threading.Channels;
 using ForumService.ForumService.Infrastructure.Messaging;
+using Microsoft.AspNetCore.HttpOverrides;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -47,6 +48,8 @@ builder.Services.AddScoped<IHomeFeedService, HomeFeedService>();
 builder.Services.AddForumRolePermissionStrategies();
 builder.Services.AddScoped<IPermissionService, PermissionService>();
 
+builder.Services.AddHttpContextAccessor();
+
 // Messaging / RabbitMQ
 builder.Services.AddSingleton<IConnectionFactory>(sp =>
 {
@@ -67,8 +70,10 @@ builder.Services.AddSingleton<IConnectionFactory>(sp =>
     return factory;
 });
 builder.Services.AddSingleton<RabbitMqConnectionFactory>();
-builder.Services.AddSingleton(new BoundedChannelOptions(1000) { FullMode = BoundedChannelFullMode.DropWrite });
-builder.Services.AddSingleton<BoundedChannelBuffer<TelemetryLog>, TelemetryBuffer>();
+// builder.Services.AddSingleton(new BoundedChannelOptions(1000) { FullMode = BoundedChannelFullMode.DropWrite });
+builder.Services.AddSingleton<BoundedChannelBuffer<TelemetryLog>, TelemetryBuffer>(
+    sp => new TelemetryBuffer(new BoundedChannelOptions(1000) { FullMode = BoundedChannelFullMode.DropWrite })
+);
 builder.Services.AddHostedService<TelemetryPublisherService>();
 
 builder.Services.AddAuthentication("Bearer")
@@ -124,6 +129,16 @@ if (app.Environment.IsDevelopment())
 app.UseMiddleware<ErrorHandlingMiddleware>();
 
 app.UseHttpsRedirection();
+
+var forwardedOptions = new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+};
+
+forwardedOptions.KnownNetworks.Clear();
+forwardedOptions.KnownProxies.Clear();
+
+app.UseForwardedHeaders(forwardedOptions);
 
 app.UseAuthentication();
 app.UseAuthorization();

@@ -77,7 +77,8 @@ namespace ForumService.ForumService.API.Controllers
         [HttpGet("thread/{threadId}")]
         public async Task<ActionResult<ForumThreadDto>> GetThreadById(Guid threadId, CancellationToken cancellationToken)
         {
-            var thread = await _forumThreadService.GetThreadById(threadId, cancellationToken);
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var thread = await _forumThreadService.GetThreadById(threadId, userId, cancellationToken);
             if (thread == null)
                 return NotFound("Thread not found");
             return Ok(thread);
@@ -93,7 +94,7 @@ namespace ForumService.ForumService.API.Controllers
                 return Unauthorized("Invalid user id");
 
             var userGuid = Guid.Parse(userId);
-            var thread = await _forumThreadService.GetThreadById(comment.ThreadId);
+            var thread = await _forumThreadService.GetThreadById(comment.ThreadId, userId);
             if (thread == null)
                 return NotFound("Thread not found");
 
@@ -126,7 +127,7 @@ namespace ForumService.ForumService.API.Controllers
                 return BadRequest("Thread id is required (send \"id\" or \"threadId\" from create thread or list threads).");
 
             var userGuid = Guid.Parse(userId);
-            var thread = await _forumThreadService.GetThreadById(threadId);
+            var thread = await _forumThreadService.GetThreadById(threadId, userId);
             if (thread == null)
                 return NotFound("Thread not found");
 
@@ -222,7 +223,7 @@ namespace ForumService.ForumService.API.Controllers
             if (request.ThreadId == Guid.Empty || string.IsNullOrWhiteSpace(request.PollContent))
                 return BadRequest("ThreadId and PollContent are required.");
 
-            var result = await _forumThreadService.VotePoll(request.ThreadId, request.PollContent);
+            var result = await _forumThreadService.VotePoll(Guid.Parse(userId), request.ThreadId, request.PollContent);
             if (result == null)
                 return NotFound("Thread or poll item not found.");
             return Ok(result);
