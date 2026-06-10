@@ -26,6 +26,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+builder.Services.AddMediatR(cfg =>
+{
+    cfg.RegisterServicesFromAssembly(typeof(ApplicationAssemblyMarker).Assembly);
+});
 builder.Services.AddEdynTelemetry(builder.Configuration, "edyn-forum-service", tracing =>
 {
     tracing.AddEntityFrameworkCoreInstrumentation();
@@ -39,12 +43,9 @@ builder.Services.AddDbContext<ForumDbContext>(options => options.UseNpgsql(build
 
 // Add dependency
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-builder.Services.AddScoped<IForumThreadService, ForumThreadService>();
-builder.Services.AddScoped<IForumService, ForumService.ForumService.Application.ForumService>();
 builder.Services.AddScoped<IThreadRepository, ThreadRepository>();
 builder.Services.AddScoped<IForumRepository, ForumRepository>();
 builder.Services.AddScoped<ICommentNotificationSender, CommentNotificationSender>();
-builder.Services.AddScoped<IHomeFeedService, HomeFeedService>();
 builder.Services.AddForumRolePermissionStrategies();
 builder.Services.AddScoped<IPermissionService, PermissionService>();
 

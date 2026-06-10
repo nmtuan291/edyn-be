@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using ForumService.ForumService.Application.DTOs;
-using ForumService.ForumService.Application.Interfaces.Services;
+using ForumService.ForumService.Application.Features.Feeds.Queries.GetHomeFeed;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,11 +11,11 @@ namespace ForumService.ForumService.API.Controllers;
 [Route("api/[controller]")]
 public class FeedController : ControllerBase
 {
-    private readonly IHomeFeedService _homeFeedService;
+    private readonly IMediator _mediator;
 
-    public FeedController(IHomeFeedService homeFeedService)
+    public FeedController(IMediator mediator)
     {
-        _homeFeedService = homeFeedService;
+        _mediator = mediator;
     }
 
     [AllowAnonymous]
@@ -28,7 +29,7 @@ public class FeedController : ControllerBase
         if (pageSize is < 1 or > 50) pageSize = 20;
 
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        var feed = await _homeFeedService.GetHomeFeed(userId, page, pageSize, cancellationToken);
+        var feed = await _mediator.Send(new GetHomeFeedQuery(userId, page, pageSize), cancellationToken);
         return Ok(feed);
     }
 }
