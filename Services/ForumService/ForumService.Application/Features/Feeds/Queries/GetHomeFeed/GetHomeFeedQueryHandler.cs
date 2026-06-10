@@ -15,7 +15,7 @@ public sealed class GetHomeFeedQueryHandler : IRequestHandler<GetHomeFeedQuery, 
     private const int CandidateMultiplier = 5;
     private const int MaxPerForum = 5;
     private const double TagAffinityBoost = 1.2;
-    private static readonly TimeSpan FeedCutoff = TimeSpan.FromDays(7);
+    private static readonly TimeSpan FeedCutoff = TimeSpan.FromDaysg(7);
 
     public GetHomeFeedQueryHandler(IUnitOfWork unitOfWork, IMapper mapper)
     {
