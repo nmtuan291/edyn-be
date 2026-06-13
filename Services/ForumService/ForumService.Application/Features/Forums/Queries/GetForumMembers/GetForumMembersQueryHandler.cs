@@ -1,8 +1,8 @@
 using AutoMapper;
 using ForumService.ForumService.Application.DTOs;
 using ForumService.ForumService.Application.Enums;
+using ForumService.ForumService.Application.Interfaces.Repositories;
 using ForumService.ForumService.Application.Interfaces.Services;
-using ForumService.ForumService.Application.Interfaces.UnitOfWork;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Polly;
@@ -13,7 +13,7 @@ namespace ForumService.ForumService.Application.Features.Forums.Queries.GetForum
 
 public sealed class GetForumMembersQueryHandler : IRequestHandler<GetForumMembersQuery, List<ForumMemberDto>>
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IForumQueryRepository _forumRepository;
     private readonly IMapper _mapper;
     private readonly ILogger<GetForumMembersQueryHandler> _logger;
     private readonly IPermissionService _permissionService;
@@ -21,13 +21,13 @@ public sealed class GetForumMembersQueryHandler : IRequestHandler<GetForumMember
     private readonly AsyncRetryPolicy _retryPolicy;
 
     public GetForumMembersQueryHandler(
-        IUnitOfWork unitOfWork,
+        IForumQueryRepository forumRepository,
         IMapper mapper,
         ILogger<GetForumMembersQueryHandler> logger,
         IPermissionService permissionService,
         UserProfileService.UserProfileServiceClient userProfileService)
     {
-        _unitOfWork = unitOfWork;
+        _forumRepository = forumRepository;
         _mapper = mapper;
         _logger = logger;
         _permissionService = permissionService;
@@ -39,7 +39,7 @@ public sealed class GetForumMembersQueryHandler : IRequestHandler<GetForumMember
 
     public async Task<List<ForumMemberDto>> Handle(GetForumMembersQuery request, CancellationToken cancellationToken)
     {
-        var forumUsers = await _unitOfWork.ForumRepo.GetForumUsersAsync(request.ForumId, cancellationToken);
+        var forumUsers = await _forumRepository.GetForumUsersAsync(request.ForumId, cancellationToken);
         if (forumUsers.Count == 0)
             return [];
 

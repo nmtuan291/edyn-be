@@ -1,19 +1,21 @@
 using AutoMapper;
 using ForumService.ForumService.Application.DTOs;
 using ForumService.ForumService.Application.Enums;
-using ForumService.ForumService.Application.Interfaces.UnitOfWork;
+using ForumService.ForumService.Application.Interfaces.Repositories;
 using MediatR;
 
 namespace ForumService.ForumService.Application.Features.Threads.Queries.GetComments;
 
 public sealed class GetCommentsQueryHandler : IRequestHandler<GetCommentsQuery, List<CommentDto>>
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly ICommentQueryRepository _commentRepository;
+    private readonly IVoteQueryRepository _voteRepository;
     private readonly IMapper _mapper;
 
-    public GetCommentsQueryHandler(IUnitOfWork unitOfWork, IMapper mapper)
+    public GetCommentsQueryHandler(ICommentQueryRepository commentRepository, IVoteQueryRepository voteRepository, IMapper mapper)
     {
-        _unitOfWork = unitOfWork;
+        _commentRepository = commentRepository;
+        _voteRepository = voteRepository;
         _mapper = mapper;
     }
 
@@ -22,13 +24,13 @@ public sealed class GetCommentsQueryHandler : IRequestHandler<GetCommentsQuery, 
         if (request.ThreadId == Guid.Empty)
             throw new ArgumentNullException(nameof(request.ThreadId));
 
-        var comments = await _unitOfWork.CommentRepo.GetCommentByThreadIdAsync(
+        var comments = await _commentRepository.GetCommentByThreadIdAsync(
             request.ThreadId,
             cancellationToken);
 
         var votedComments = string.IsNullOrEmpty(request.UserId)
             ? new Dictionary<Guid, bool>()
-            : await _unitOfWork.VoteRepo.GetVotedCommentsAsync(Guid.Parse(request.UserId), request.ThreadId);
+            : await _voteRepository.GetVotedCommentsAsync(Guid.Parse(request.UserId), request.ThreadId);
 
         return _mapper.Map<List<CommentDto>>(comments)
             .Select(dto =>

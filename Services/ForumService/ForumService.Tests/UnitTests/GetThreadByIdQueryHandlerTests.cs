@@ -1,7 +1,6 @@
 using AutoMapper;
 using ForumService.ForumService.Application.Features.Threads.Queries.GetThreadById;
 using ForumService.ForumService.Application.Interfaces.Repositories;
-using ForumService.ForumService.Application.Interfaces.UnitOfWork;
 using ForumService.ForumService.Application.DTOs;
 using ForumService.ForumService.Domain.Entities;
 using Moq;
@@ -62,15 +61,12 @@ public class GetThreadByIdQueryHandlerTests
                 LastUpdatedAt = source.LastUpdatedAt
             });
 
-        var mockRepo = new Mock<IThreadRepository>();
+        var mockRepo = new Mock<IThreadQueryRepository>();
         mockRepo
             .Setup(r => r.GetThreadByIdAsync(threadId, userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(thread);
 
-        var mockUow = new Mock<IUnitOfWork>();
-        mockUow.Setup(u => u.ThreadRepo).Returns(mockRepo.Object);
-
-        var sut = new GetThreadByIdQueryHandler(mockUow.Object, mapper.Object);
+        var sut = new GetThreadByIdQueryHandler(mockRepo.Object, mapper.Object);
 
         var result = await sut.Handle(new GetThreadByIdQuery(threadId, userId.ToString()), CancellationToken.None);
 

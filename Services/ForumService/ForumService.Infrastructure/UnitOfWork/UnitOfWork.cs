@@ -1,9 +1,7 @@
-using System.Threading.Channels;
 using AutoMapper;
 using ForumService.ForumService.Application.Interfaces.Repositories;
 using ForumService.ForumService.Application.Interfaces.UnitOfWork;
 using ForumService.ForumService.Infrastructure.Data;
-using ForumService.ForumService.Infrastructure.Messaging;
 using ForumService.ForumService.Infrastructure.Repositories;
 using StackExchange.Redis;
 
@@ -14,8 +12,6 @@ namespace ForumService.ForumService.Infrastructure.UnitOfWork
     {
         private readonly ForumDbContext _context;
         private readonly IConnectionMultiplexer _redis;
-        private readonly BoundedChannelBuffer<TelemetryLog> _buffer;
-        private readonly IHttpContextAccessor _httpContextAccessor;
 
         public IThreadRepository ThreadRepo { get; }
         public IForumRepository ForumRepo { get; }
@@ -23,13 +19,12 @@ namespace ForumService.ForumService.Infrastructure.UnitOfWork
         public ICommentRepository CommentRepo { get; }
         public IOutboxRepository OutboxRepo { get; }
         
-        public UnitOfWork(ForumDbContext context, IConnectionMultiplexer redis, IMapper mapper, 
-            BoundedChannelBuffer<TelemetryLog> buffer, IHttpContextAccessor httpContextAccessor)
+        public UnitOfWork(ForumDbContext context, IConnectionMultiplexer redis, IMapper mapper)
         {
             _context = context;
             _redis = redis;
-            ThreadRepo = new ThreadRepository(_context, _redis, mapper, buffer, httpContextAccessor);
-            ForumRepo = new ForumRepository(_context, _redis, mapper, buffer);
+            ThreadRepo = new ThreadRepository(_context, _redis, mapper);
+            ForumRepo = new ForumRepository(_context, _redis, mapper);
             VoteRepo = new VoteRepository(_context, _redis, mapper);
             CommentRepo = new CommentRepository(_context, mapper);
             OutboxRepo = new OutboxRepository(_context);

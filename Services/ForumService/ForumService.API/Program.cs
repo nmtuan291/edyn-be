@@ -44,12 +44,15 @@ builder.Services.AddDbContext<ForumDbContext>(options => options.UseNpgsql(build
 // Add dependency
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IThreadRepository, ThreadRepository>();
+builder.Services.AddScoped<IThreadQueryRepository, ThreadRepository>();
 builder.Services.AddScoped<IForumRepository, ForumRepository>();
+builder.Services.AddScoped<IForumQueryRepository, ForumRepository>();
+builder.Services.AddScoped<ICommentQueryRepository, CommentRepository>();
+builder.Services.AddScoped<IVoteRepository, VoteRepository>();
+builder.Services.AddScoped<IVoteQueryRepository, VoteRepository>();
 builder.Services.AddScoped<ICommentNotificationSender, CommentNotificationSender>();
 builder.Services.AddForumRolePermissionStrategies();
 builder.Services.AddScoped<IPermissionService, PermissionService>();
-
-builder.Services.AddHttpContextAccessor();
 
 // Messaging / RabbitMQ
 builder.Services.AddSingleton<IConnectionFactory>(sp =>

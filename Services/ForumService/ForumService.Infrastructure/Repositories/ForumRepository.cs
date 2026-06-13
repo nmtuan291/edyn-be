@@ -6,29 +6,25 @@ using ForumService.ForumService.Application.Interfaces.Repositories;
 using ForumService.ForumService.Domain.Entities;
 using ForumService.ForumService.Infrastructure.Data;
 using ForumService.ForumService.Infrastructure.Extensions;
-using ForumService.ForumService.Infrastructure.Messaging;
 using ForumService.ForumService.Infrastructure.Models;
 using Microsoft.EntityFrameworkCore;
 using StackExchange.Redis;
 
 namespace ForumService.ForumService.Infrastructure.Repositories
 {
-    public class ForumRepository : IForumRepository
+    public class ForumRepository : IForumRepository, IForumQueryRepository
     {
         private static readonly TimeSpan PermissionCacheTtl = TimeSpan.FromMinutes(30);
 
         private readonly ForumDbContext _context;
         private readonly IDatabase _redis;
         private readonly IMapper _mapper;
-        private readonly BoundedChannelBuffer<TelemetryLog> _buffer;
 
-        public ForumRepository(ForumDbContext context, IConnectionMultiplexer redis, IMapper mapper, 
-            BoundedChannelBuffer<TelemetryLog> buffer)
+        public ForumRepository(ForumDbContext context, IConnectionMultiplexer redis, IMapper mapper)
         {
             _context = context;
             _redis = redis.GetDatabase();
             _mapper = mapper;
-            _buffer = buffer;
         }
 
         public async Task<Forum?> GetForumByIdAsync(Guid forumId, CancellationToken cancellationToken = default)

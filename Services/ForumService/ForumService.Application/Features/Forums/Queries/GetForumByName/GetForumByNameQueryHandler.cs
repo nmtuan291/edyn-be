@@ -1,24 +1,24 @@
 using AutoMapper;
 using ForumService.ForumService.Application.DTOs;
-using ForumService.ForumService.Application.Interfaces.UnitOfWork;
+using ForumService.ForumService.Application.Interfaces.Repositories;
 using MediatR;
 
 namespace ForumService.ForumService.Application.Features.Forums.Queries.GetForumByName;
 
 public sealed class GetForumByNameQueryHandler : IRequestHandler<GetForumByNameQuery, ForumDto?>
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IForumQueryRepository _forumRepository;
     private readonly IMapper _mapper;
 
-    public GetForumByNameQueryHandler(IUnitOfWork unitOfWork, IMapper mapper)
+    public GetForumByNameQueryHandler(IForumQueryRepository forumRepository, IMapper mapper)
     {
-        _unitOfWork = unitOfWork;
+        _forumRepository = forumRepository;
         _mapper = mapper;
     }
 
     public async Task<ForumDto?> Handle(GetForumByNameQuery request, CancellationToken cancellationToken)
     {
-        var forum = await _unitOfWork.ForumRepo.GetForumByNameAsync(
+        var forum = await _forumRepository.GetForumByNameAsync(
             request.UserId,
             request.ForumName,
             cancellationToken);

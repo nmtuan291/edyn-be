@@ -1,7 +1,7 @@
 using AutoMapper;
 using ForumService.ForumService.Application.DTOs;
 using ForumService.ForumService.Application.Enums;
-using ForumService.ForumService.Application.Interfaces.UnitOfWork;
+using ForumService.ForumService.Application.Interfaces.Repositories;
 using ForumService.ForumService.Domain.Entities;
 using MediatR;
 
@@ -9,17 +9,25 @@ namespace ForumService.ForumService.Application.Features.Feeds.Queries.GetHomeFe
 
 public sealed class GetHomeFeedQueryHandler : IRequestHandler<GetHomeFeedQuery, List<ForumThreadDto>>
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IForumQueryRepository _forumRepository;
+    private readonly IThreadQueryRepository _threadRepository;
+    private readonly IVoteQueryRepository _voteRepository;
     private readonly IMapper _mapper;
 
     private const int CandidateMultiplier = 5;
     private const int MaxPerForum = 5;
     private const double TagAffinityBoost = 1.2;
-    private static readonly TimeSpan FeedCutoff = TimeSpan.FromDaysg(7);
+    private static readonly TimeSpan FeedCutoff = TimeSpan.FromDays(365);
 
-    public GetHomeFeedQueryHandler(IUnitOfWork unitOfWork, IMapper mapper)
+    public GetHomeFeedQueryHandler(
+        IForumQueryRepository forumRepository,
+        IThreadQueryRepository threadRepository,
+        IVoteQueryRepository voteRepository,
+        IMapper mapper)
     {
-        _unitOfWork = unitOfWork;
+        _forumRepository = forumRepository;
+        _threadRepository = threadRepository;
+        _voteRepository = voteRepository;
         _mapper = mapper;
     }
 
@@ -33,7 +41,7 @@ public sealed class GetHomeFeedQueryHandler : IRequestHandler<GetHomeFeedQuery, 
         if (!string.IsNullOrEmpty(request.UserId))
         {
             parsedUserId = Guid.Parse(request.UserId);
-            forumIds = await _unitOfWork.ForumRepo.GetJoinedForumIdsAsync(parsedUserId.Value, cancellationToken);
+            forumIds = await _forumRepository.GetJoinedForumIdsAsync(parsedUserId.Value, cancellationToken);
             if (forumIds.Count == 0)
                 forumIds = null;
         }
@@ -41,7 +49,7 @@ public sealed class GetHomeFeedQueryHandler : IRequestHandler<GetHomeFeedQuery, 
         var candidateCount = request.PageSize * CandidateMultiplier;
         var cutoff = DateTime.UtcNow - FeedCutoff;
 
-        var candidates = await _unitOfWork.ThreadRepo.GetHomeFeedCandidatesAsync(
+        var candidates = await _threadRepository.GetHomeFeedCandidatesAsync(
             forumIds,
             candidateCount,
             cutoff,
@@ -49,7 +57,7 @@ public sealed class GetHomeFeedQueryHandler : IRequestHandler<GetHomeFeedQuery, 
 
         Dictionary<string, double>? tagAffinity = null;
         if (parsedUserId.HasValue)
-            tagAffinity = await _unitOfWork.VoteRepo.GetTagAffinityAsync(parsedUserId.Value);
+            tagAffinity = await _voteRepository.GetTagAffinityAsync(parsedUserId.Value);
 
         var scored = candidates
             .Select(t => new { Thread = t, Score = ComputeBoostedScore(t, tagAffinity) })
@@ -64,14 +72,14 @@ public sealed class GetHomeFeedQueryHandler : IRequestHandler<GetHomeFeedQuery, 
             .ToList();
 
         var forumIdsInResult = paged.Select(t => t.ForumId).Distinct();
-        var forumInfo = await _unitOfWork.ForumRepo.GetForumInfoByIdsAsync(forumIdsInResult, cancellationToken);
+        var forumInfo = await _forumRepository.GetForumInfoByIdsAsync(forumIdsInResult, cancellationToken);
 
         var votedByForum = new Dictionary<Guid, Dictionary<Guid, bool>>();
         if (parsedUserId.HasValue)
         {
             foreach (var forumId in paged.Select(t => t.ForumId).Distinct())
             {
-                votedByForum[forumId] = await _unitOfWork.VoteRepo.GetVotedThreadsAsync(parsedUserId.Value, forumId);
+                votedByForum[forumId] = await _voteRepository.GetVotedThreadsAsync(parsedUserId.Value, forumId);
             }
         }
 

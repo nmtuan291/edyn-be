@@ -31,6 +31,7 @@ namespace ForumService.ForumService.Infrastructure.Models
         public ICollection<TagEf> Tags { get; set; }
 
         public ICollection<string>? Images { get; set; }
+        public ICollection<string>? Videos { get; set; }
         
         public ICollection<PollEf>? PollItems { get; set; }
 

@@ -7,28 +7,22 @@ using ForumService.ForumService.Application.Enums;
 using ForumService.ForumService.Application.Interfaces.Repositories;
 using ForumService.ForumService.Application.Requests;
 using ForumService.ForumService.Infrastructure.Extensions;
-using ForumService.ForumService.Infrastructure.Messaging;
 using ForumService.ForumService.Infrastructure.Models;
 using StackExchange.Redis;
 
 namespace ForumService.ForumService.Infrastructure.Repositories
 {
-    public class ThreadRepository: IThreadRepository
+    public class ThreadRepository: IThreadRepository, IThreadQueryRepository
     {
         private readonly ForumDbContext _context;
         private readonly IDatabase _redis;
         private readonly IMapper _mapper;
-        private readonly BoundedChannelBuffer<TelemetryLog> _buffer;
-        private readonly IHttpContextAccessor _httpContextAccessor;
         
-        public ThreadRepository(ForumDbContext context, IConnectionMultiplexer redis, IMapper mapper, 
-            BoundedChannelBuffer<TelemetryLog> buffer, IHttpContextAccessor httpContextAccessor)
+        public ThreadRepository(ForumDbContext context, IConnectionMultiplexer redis, IMapper mapper)
         {
             _context = context;
             _redis = redis.GetDatabase();
             _mapper = mapper;
-            _buffer = buffer;
-            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<List<ForumThread>> GetThreadsByForumIdAsync(ForumThreadPageQuery query, CancellationToken cancellationToken = default)
@@ -66,10 +60,6 @@ namespace ForumService.ForumService.Infrastructure.Repositories
                 .Include(t => t.Tags)
                 .ToListAsync(cancellationToken);
 
-            /*var telemetryLog = new TelemetryLog();
-
-            _buffer.Writer.TryWrite(telemetryLog);*/
-            
             return _mapper.Map<List<ForumThread>>(threadList);
         }
 

@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ForumService.ForumService.Infrastructure.Repositories;
 
-public class CommentRepository : ICommentRepository
+public class CommentRepository : ICommentRepository, ICommentQueryRepository
 {
     private readonly ForumDbContext _context;
     private readonly IMapper _mapper;

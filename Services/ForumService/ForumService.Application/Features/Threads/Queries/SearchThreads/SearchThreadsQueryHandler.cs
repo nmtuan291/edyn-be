@@ -1,18 +1,18 @@
 using AutoMapper;
 using ForumService.ForumService.Application.DTOs;
-using ForumService.ForumService.Application.Interfaces.UnitOfWork;
+using ForumService.ForumService.Application.Interfaces.Repositories;
 using MediatR;
 
 namespace ForumService.ForumService.Application.Features.Threads.Queries.SearchThreads;
 
 public sealed class SearchThreadsQueryHandler : IRequestHandler<SearchThreadsQuery, PagedResult<ForumThreadDto>>
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IThreadQueryRepository _threadRepository;
     private readonly IMapper _mapper;
 
-    public SearchThreadsQueryHandler(IUnitOfWork unitOfWork, IMapper mapper)
+    public SearchThreadsQueryHandler(IThreadQueryRepository threadRepository, IMapper mapper)
     {
-        _unitOfWork = unitOfWork;
+        _threadRepository = threadRepository;
         _mapper = mapper;
     }
 
@@ -31,13 +31,13 @@ public sealed class SearchThreadsQueryHandler : IRequestHandler<SearchThreadsQue
             };
         }
 
-        var threads = await _unitOfWork.ThreadRepo.SearchThreadsAsync(
+        var threads = await _threadRepository.SearchThreadsAsync(
             request.Query,
             request.Page,
             request.PageSize,
             cancellationToken);
 
-        var totalCount = await _unitOfWork.ThreadRepo.SearchThreadsCountAsync(
+        var totalCount = await _threadRepository.SearchThreadsCountAsync(
             request.Query,
             cancellationToken);
 

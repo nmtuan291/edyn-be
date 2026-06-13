@@ -1,7 +1,7 @@
 using AutoMapper;
 using ForumService.ForumService.Application.DTOs;
 using ForumService.ForumService.Application.Enums;
-using ForumService.ForumService.Application.Interfaces.UnitOfWork;
+using ForumService.ForumService.Application.Interfaces.Repositories;
 using ForumService.ForumService.Application.Requests;
 using MediatR;
 
@@ -9,12 +9,14 @@ namespace ForumService.ForumService.Application.Features.Threads.Queries.GetForu
 
 public sealed class GetForumThreadsQueryHandler : IRequestHandler<GetForumThreadsQuery, PagedResult<ForumThreadDto>>
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IThreadQueryRepository _threadRepository;
+    private readonly IVoteQueryRepository _voteRepository;
     private readonly IMapper _mapper;
 
-    public GetForumThreadsQueryHandler(IUnitOfWork unitOfWork, IMapper mapper)
+    public GetForumThreadsQueryHandler(IThreadQueryRepository threadRepository, IVoteQueryRepository voteRepository, IMapper mapper)
     {
-        _unitOfWork = unitOfWork;
+        _threadRepository = threadRepository;
+        _voteRepository = voteRepository;
         _mapper = mapper;
     }
 
@@ -29,10 +31,10 @@ public sealed class GetForumThreadsQueryHandler : IRequestHandler<GetForumThread
             request.PageNumber,
             request.PageSize);
 
-        var threads = await _unitOfWork.ThreadRepo.GetThreadsByForumIdAsync(page, cancellationToken);
+        var threads = await _threadRepository.GetThreadsByForumIdAsync(page, cancellationToken);
         var votedThreads = string.IsNullOrEmpty(request.UserId)
             ? new Dictionary<Guid, bool>()
-            : await _unitOfWork.VoteRepo.GetVotedThreadsAsync(Guid.Parse(request.UserId), request.ForumId);
+            : await _voteRepository.GetVotedThreadsAsync(Guid.Parse(request.UserId), request.ForumId);
 
         var items = _mapper.Map<List<ForumThreadDto>>(threads)
             .Select(dto =>
@@ -52,7 +54,7 @@ public sealed class GetForumThreadsQueryHandler : IRequestHandler<GetForumThread
             })
             .ToList();
 
-        var totalCount = await _unitOfWork.ThreadRepo.GetThreadCountByForumIdAsync(
+        var totalCount = await _threadRepository.GetThreadCountByForumIdAsync(
             request.ForumId,
             cancellationToken);
 

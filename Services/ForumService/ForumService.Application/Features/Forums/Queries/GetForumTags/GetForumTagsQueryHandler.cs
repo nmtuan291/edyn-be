@@ -1,25 +1,25 @@
 using ForumService.ForumService.Application.DTOs;
 using ForumService.ForumService.Application.Exceptions;
-using ForumService.ForumService.Application.Interfaces.UnitOfWork;
+using ForumService.ForumService.Application.Interfaces.Repositories;
 using MediatR;
 
 namespace ForumService.ForumService.Application.Features.Forums.Queries.GetForumTags;
 
 public sealed class GetForumTagsQueryHandler : IRequestHandler<GetForumTagsQuery, List<ForumTagDto>>
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IForumQueryRepository _forumRepository;
 
-    public GetForumTagsQueryHandler(IUnitOfWork unitOfWork)
+    public GetForumTagsQueryHandler(IForumQueryRepository forumRepository)
     {
-        _unitOfWork = unitOfWork;
+        _forumRepository = forumRepository;
     }
 
     public async Task<List<ForumTagDto>> Handle(GetForumTagsQuery request, CancellationToken cancellationToken)
     {
-        var forum = await _unitOfWork.ForumRepo.GetForumByIdAsync(request.ForumId, cancellationToken);
+        var forum = await _forumRepository.GetForumByIdAsync(request.ForumId, cancellationToken);
         if (forum == null)
             throw new ForumNotFoundException(request.ForumId);
 
-        return await _unitOfWork.ForumRepo.GetForumTagCatalogAsync(request.ForumId, cancellationToken);
+        return await _forumRepository.GetForumTagCatalogAsync(request.ForumId, cancellationToken);
     }
 }

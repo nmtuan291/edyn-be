@@ -1,18 +1,18 @@
 using AutoMapper;
 using ForumService.ForumService.Application.DTOs;
-using ForumService.ForumService.Application.Interfaces.UnitOfWork;
+using ForumService.ForumService.Application.Interfaces.Repositories;
 using MediatR;
 
 namespace ForumService.ForumService.Application.Features.Forums.Queries.SearchForums;
 
 public sealed class SearchForumsQueryHandler : IRequestHandler<SearchForumsQuery, List<ForumDto>>
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IForumQueryRepository _forumRepository;
     private readonly IMapper _mapper;
 
-    public SearchForumsQueryHandler(IUnitOfWork unitOfWork, IMapper mapper)
+    public SearchForumsQueryHandler(IForumQueryRepository forumRepository, IMapper mapper)
     {
-        _unitOfWork = unitOfWork;
+        _forumRepository = forumRepository;
         _mapper = mapper;
     }
 
@@ -21,7 +21,7 @@ public sealed class SearchForumsQueryHandler : IRequestHandler<SearchForumsQuery
         if (string.IsNullOrWhiteSpace(request.Query))
             return [];
 
-        var forums = await _unitOfWork.ForumRepo.SearchForumsAsync(request.Query, cancellationToken);
+        var forums = await _forumRepository.SearchForumsAsync(request.Query, cancellationToken);
         return _mapper.Map<List<ForumDto>>(forums);
     }
 }

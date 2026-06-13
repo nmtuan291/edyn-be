@@ -1,18 +1,18 @@
 using AutoMapper;
 using ForumService.ForumService.Application.DTOs;
-using ForumService.ForumService.Application.Interfaces.UnitOfWork;
+using ForumService.ForumService.Application.Interfaces.Repositories;
 using MediatR;
 
 namespace ForumService.ForumService.Application.Features.Threads.Queries.GetThreadById;
 
 public sealed class GetThreadByIdQueryHandler : IRequestHandler<GetThreadByIdQuery, ForumThreadDto?>
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IThreadQueryRepository _threadRepository;
     private readonly IMapper _mapper;
 
-    public GetThreadByIdQueryHandler(IUnitOfWork unitOfWork, IMapper mapper)
+    public GetThreadByIdQueryHandler(IThreadQueryRepository threadRepository, IMapper mapper)
     {
-        _unitOfWork = unitOfWork;
+        _threadRepository = threadRepository;
         _mapper = mapper;
     }
 
@@ -20,7 +20,7 @@ public sealed class GetThreadByIdQueryHandler : IRequestHandler<GetThreadByIdQue
     {
         var parsedUserId = Guid.TryParse(request.UserId, out var userIdGuid) ? userIdGuid : Guid.Empty;
 
-        var thread = await _unitOfWork.ThreadRepo.GetThreadByIdAsync(
+        var thread = await _threadRepository.GetThreadByIdAsync(
             request.ThreadId,
             parsedUserId,
             cancellationToken);

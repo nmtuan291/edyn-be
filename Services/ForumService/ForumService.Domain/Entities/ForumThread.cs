@@ -14,6 +14,7 @@ namespace ForumService.ForumService.Domain.Entities
         public bool IsPinned { get; set; }
         public ICollection<Tag> Tags { get; set; }
         public ICollection<string>? Images { get; set; }
+        public ICollection<string>? Videos { get; set; }
         public ICollection<Poll>? PollItems { get; set; }
         public string Content { get; set; }
         public string Slug { get; set; }
