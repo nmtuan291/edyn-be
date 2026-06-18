@@ -6,17 +6,18 @@ using ForumService.ForumService.Application.DTOs;
 using ForumService.ForumService.Application.Enums;
 using ForumService.ForumService.Application.Interfaces.Repositories;
 using ForumService.ForumService.Application.Requests;
+using ForumService.ForumService.Infrastructure.Extensions;
 using ForumService.ForumService.Infrastructure.Models;
 using StackExchange.Redis;
 
 namespace ForumService.ForumService.Infrastructure.Repositories
 {
-    public class ThreadRepository: IThreadRepository
+    public class ThreadRepository: IThreadRepository, IThreadQueryRepository
     {
         private readonly ForumDbContext _context;
         private readonly IDatabase _redis;
         private readonly IMapper _mapper;
-
+        
         public ThreadRepository(ForumDbContext context, IConnectionMultiplexer redis, IMapper mapper)
         {
             _context = context;
@@ -55,9 +56,10 @@ namespace ForumService.ForumService.Infrastructure.Repositories
             
             var threadList = await threads
                 .Include(t => t.PollItems)
+                .Include(t => t.PollVotes)
                 .Include(t => t.Tags)
                 .ToListAsync(cancellationToken);
-            
+
             return _mapper.Map<List<ForumThread>>(threadList);
         }
 
@@ -74,32 +76,42 @@ namespace ForumService.ForumService.Infrastructure.Repositories
                 _context.Threads.Remove(thread);
         }
 
-        public async Task<ForumThread?> GetThreadByIdAsync(Guid threadId, CancellationToken cancellationToken = default)
+        public async Task<ForumThread?> GetThreadByIdAsync(Guid threadId, Guid userId = default, CancellationToken cancellationToken = default)
         {
             var thread = await _context.Threads
                 .AsNoTracking()
                 .Include(t => t.PollItems)
+                .Include(t => t.PollVotes)
                 .Include(t => t.Votes)
                 .Include(t => t.Tags)
+                .Include(t => t.ForumEf)
                 .SingleOrDefaultAsync(t => t.Id == threadId, cancellationToken);
+
+            if (thread?.ForumEf != null && userId != Guid.Empty)
+                await _redis.WriteVisitForum(userId, thread.ForumEf);
             
             return _mapper.Map<ForumThread>(thread);
         }
         
-        public async Task<List<ForumThread>> GetHomeFeedCandidatesAsync(List<Guid>? forumIds, int count, DateTime cutoff, CancellationToken cancellationToken = default)
+        public async Task<List<ForumThread>> GetHomeFeedCandidatesAsync(List<Guid>? forumIds, int count, DateTime cutoff, SortBy sortBy = SortBy.Hot, CancellationToken cancellationToken = default)
         {
             var query = _context.Threads
                 .AsNoTracking()
                 .Include(t => t.PollItems)
+                .Include(t => t.PollVotes)
                 .Include(t => t.Tags)
                 .Where(t => t.CreatedAt > cutoff);
 
             if (forumIds is { Count: > 0 })
                 query = query.Where(t => forumIds.Contains(t.ForumId));
 
+            // For "Latest", fetch the most recent candidates; otherwise the most
+            // upvoted ones so the hot-score ranking has high-engagement material.
+            query = sortBy == SortBy.Latest
+                ? query.OrderByDescending(t => t.CreatedAt)
+                : query.OrderByDescending(t => t.Upvote).ThenByDescending(t => t.CreatedAt);
+
             var candidates = await query
-                .OrderByDescending(t => t.Upvote)
-                .ThenByDescending(t => t.CreatedAt)
                 .Take(count)
                 .ToListAsync(cancellationToken);
 
@@ -110,6 +122,7 @@ namespace ForumService.ForumService.Infrastructure.Repositories
         {
             var ef = _context.Threads
                 .Include(t => t.PollItems)
+                .Include(t => t.PollVotes)
                 .Include(t => t.Votes)
                 .First(t => t.Id == thread.Id);
 
@@ -129,6 +142,7 @@ namespace ForumService.ForumService.Infrastructure.Repositories
             var threads = await _context.Threads
                 .AsNoTracking()
                 .Include(t => t.PollItems)
+                .Include(t => t.PollVotes)
                 .Include(t => t.Tags)
                 .Where(t => t.Title.ToLower().Contains(lowerQuery) || t.Content.ToLower().Contains(lowerQuery))
                 .OrderByDescending(t => t.CreatedAt)
@@ -144,6 +158,55 @@ namespace ForumService.ForumService.Infrastructure.Repositories
             return await _context.Threads
                 .AsNoTracking()
                 .CountAsync(t => t.Title.ToLower().Contains(lowerQuery) || t.Content.ToLower().Contains(lowerQuery), cancellationToken);
+        }
+
+        public async Task<ForumThread?> VotePollAsync(Guid userId, Guid threadId, string pollContent)
+        {
+            // Load WITH tracking so EF properly detects additions/removals
+            var thread = await _context.Threads
+                .Include(t => t.PollItems)
+                .Include(t => t.PollVotes)
+                .Include(t => t.Tags)
+                .FirstOrDefaultAsync(t => t.Id == threadId);
+
+            if (thread == null) return null;
+
+            var pollItem = thread.PollItems?.FirstOrDefault(p => p.PollContent == pollContent);
+            if (pollItem == null) return null;
+
+            var existingVote = thread.PollVotes?.FirstOrDefault(v => v.UserId == userId);
+
+            if (existingVote != null)
+            {
+                if (existingVote.PollContent == pollContent)
+                {
+                    // Toggle off: user clicked the same option again
+                    _context.PollVotes.Remove(existingVote);
+                    pollItem.VoteCount = Math.Max(0, pollItem.VoteCount - 1);
+                }
+                else
+                {
+                    // Switch: user picked a different option
+                    var oldPollItem = thread.PollItems?.FirstOrDefault(p => p.PollContent == existingVote.PollContent);
+                    if (oldPollItem != null) oldPollItem.VoteCount = Math.Max(0, oldPollItem.VoteCount - 1);
+
+                    existingVote.PollContent = pollContent;
+                    pollItem.VoteCount++;
+                }
+            }
+            else
+            {
+                // New vote
+                _context.PollVotes.Add(new PollVoteEf
+                {
+                    UserId = userId,
+                    ThreadId = threadId,
+                    PollContent = pollContent
+                });
+                pollItem.VoteCount++;
+            }
+
+            return _mapper.Map<ForumThread>(thread);
         }
     }
 }

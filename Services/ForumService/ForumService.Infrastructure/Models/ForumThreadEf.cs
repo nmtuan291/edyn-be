@@ -31,6 +31,7 @@ namespace ForumService.ForumService.Infrastructure.Models
         public ICollection<TagEf> Tags { get; set; }
 
         public ICollection<string>? Images { get; set; }
+        public ICollection<string>? Videos { get; set; }
         
         public ICollection<PollEf>? PollItems { get; set; }
 
@@ -48,7 +49,8 @@ namespace ForumService.ForumService.Infrastructure.Models
 
         [Required]
         public DateTime LastUpdatedAt { get; set; }
-        
         public ICollection<ThreadVoteEf> Votes { get; set; }
+        
+        public ICollection<PollVoteEf> PollVotes { get; set; }
     }
 }

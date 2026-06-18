@@ -200,6 +200,9 @@ namespace ForumService.Migrations
                     b.Property<int>("Upvote")
                         .HasColumnType("integer");
 
+                    b.PrimitiveCollection<string[]>("Videos")
+                        .HasColumnType("text[]");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ForumId");
@@ -286,6 +289,25 @@ namespace ForumService.Migrations
                     b.HasKey("ThreadId", "PollContent");
 
                     b.ToTable("Poll", (string)null);
+                });
+
+            modelBuilder.Entity("ForumService.ForumService.Infrastructure.Models.PollVoteEf", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ThreadId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("PollContent")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("UserId", "ThreadId");
+
+                    b.HasIndex("ThreadId");
+
+                    b.ToTable("PollVotes");
                 });
 
             modelBuilder.Entity("ForumService.ForumService.Infrastructure.Models.TagEf", b =>
@@ -404,6 +426,17 @@ namespace ForumService.Migrations
                     b.Navigation("ThreadEf");
                 });
 
+            modelBuilder.Entity("ForumService.ForumService.Infrastructure.Models.PollVoteEf", b =>
+                {
+                    b.HasOne("ForumService.ForumService.Infrastructure.Models.ForumThreadEf", "ThreadEf")
+                        .WithMany("PollVotes")
+                        .HasForeignKey("ThreadId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ThreadEf");
+                });
+
             modelBuilder.Entity("ForumService.ForumService.Infrastructure.Models.TagEf", b =>
                 {
                     b.HasOne("ForumService.ForumService.Infrastructure.Models.ForumThreadEf", null)
@@ -430,6 +463,8 @@ namespace ForumService.Migrations
             modelBuilder.Entity("ForumService.ForumService.Infrastructure.Models.ForumThreadEf", b =>
                 {
                     b.Navigation("PollItems");
+
+                    b.Navigation("PollVotes");
 
                     b.Navigation("Tags");
 

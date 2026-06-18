@@ -1,16 +1,18 @@
+using System.Text.Json;
 using AutoMapper;
 using ForumService.ForumService.Application.DTOs;
 using ForumService.ForumService.Application.Enums;
 using ForumService.ForumService.Application.Interfaces.Repositories;
 using ForumService.ForumService.Domain.Entities;
 using ForumService.ForumService.Infrastructure.Data;
+using ForumService.ForumService.Infrastructure.Extensions;
 using ForumService.ForumService.Infrastructure.Models;
 using Microsoft.EntityFrameworkCore;
 using StackExchange.Redis;
 
 namespace ForumService.ForumService.Infrastructure.Repositories
 {
-    public class ForumRepository : IForumRepository
+    public class ForumRepository : IForumRepository, IForumQueryRepository
     {
         private static readonly TimeSpan PermissionCacheTtl = TimeSpan.FromMinutes(30);
 
@@ -31,17 +33,17 @@ namespace ForumService.ForumService.Infrastructure.Repositories
                 .AsNoTracking()
                 .Where(f => f.Id == forumId)
                 .SingleOrDefaultAsync(cancellationToken);
-
+            
             return _mapper.Map<Forum>(forum);
         }
 
-        public async Task<Forum?> GetForumByNameAsync(string name, CancellationToken cancellationToken = default)
+        public async Task<Forum?> GetForumByNameAsync(Guid userId, string name, CancellationToken cancellationToken = default)
         {
             var forum = await _context.Forums
                 .AsNoTracking()
                 .Where(f => f.Name.ToLower() == name.ToLower() || f.ShortName.ToLower() == name.ToLower())
                 .FirstOrDefaultAsync(cancellationToken);
-
+            
             return _mapper.Map<Forum>(forum);
         }
 
@@ -156,11 +158,22 @@ namespace ForumService.ForumService.Infrastructure.Repositories
                 PermissionCacheTtl);
         }
 
-        public async Task<int?> GetCachedPermissionsAsync(Guid forumId, Guid userId)
+        public async ValueTask<int?> GetCachedPermissionsAsync(Guid forumId, Guid userId)
         {
-            var value = await _redis.StringGetAsync($"perms:{forumId}:{userId}");
+            // Attempt to create the key with zero-allocation intermediate string concatenation
+            // Total length: "perms:".Length (6) + 36 (Guid1) + 1 (:) + 36 (Guid2) = 79
+            string redisKey = string.Create(79, (forumId, userId), (span, state) =>
+            {
+                "perms:".AsSpan().CopyTo(span);
+                state.forumId.TryFormat(span[6..], out _, "D");
+                span[42] = ':';
+                state.userId.TryFormat(span[43..], out _, "D");
+            });
+            
+            var value = await _redis.StringGetAsync(redisKey);
             if (value.IsNullOrEmpty) return null;
-            return int.TryParse(value, out var result) ? result : null;
+            
+            return (int?)value;
         }
 
         public async Task InvalidateCachedPermissionsAsync(Guid forumId, Guid userId)
@@ -207,6 +220,48 @@ namespace ForumService.ForumService.Infrastructure.Repositories
                 .Take(20)
                 .ToListAsync(cancellationToken);
             return _mapper.Map<List<Forum>>(forums);
+        }
+
+        public async ValueTask<List<Forum>> GetRecentVisitForumsAsync(Guid userId,
+            CancellationToken cancellationToken = default)
+        {
+            string redisKey = string.Create(43, userId, (span, state) =>
+            {
+                state.TryFormat(span, out _, "D");
+                span[36] = ':';
+                "recent".AsSpan().CopyTo(span[37..]);
+            });
+
+            var redisValues = await _redis.SortedSetRangeByRankAsync(
+                redisKey,
+                start: 0,
+                stop: -1,
+                order: Order.Descending);
+
+            return redisValues
+                .Select(v =>
+                {
+                    try
+                    {
+                        var json = (string?)v;
+                        return json != null ? JsonSerializer.Deserialize<ForumEf>(json) : null;
+                    }
+                    catch { return null; }
+                })
+                .Where(f => f != null)
+                .Select(f => _mapper.Map<Forum>(f!))
+                .ToList();
+        }
+
+        public async Task WriteVisitAsync(Guid userId, Guid forumId, CancellationToken cancellationToken = default)
+        {
+            var forum = await _context.Forums
+                .AsNoTracking()
+                .Where(f => f.Id == forumId)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (forum != null)
+                await _redis.WriteVisitForum(userId, forum);
         }
     }
 }

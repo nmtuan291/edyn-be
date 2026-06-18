@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ForumService.ForumService.Infrastructure.Repositories;
 
-public class CommentRepository : ICommentRepository
+public class CommentRepository : ICommentRepository, ICommentQueryRepository
 {
     private readonly ForumDbContext _context;
     private readonly IMapper _mapper;
@@ -79,5 +79,36 @@ public class CommentRepository : ICommentRepository
             .FirstAsync(t => t.Id == comment.Id);
 
         _mapper.Map(comment, ef);
+    }
+
+    public async Task<(List<(Comment Comment, string ThreadTitle, string RealmShortName)> Comments, int TotalCount)> GetCommentsByUserIdAsync(Guid userId, int page, int pageSize, CancellationToken cancellationToken = default)
+    {
+        var query = _context.Comments
+            .AsNoTracking()
+            .Include(c => c.ThreadEf)
+            .ThenInclude(t => t.ForumEf)
+            .Where(c => c.OwnerId == userId && !c.Deleted);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var comments = await query
+            .OrderByDescending(c => c.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(c => new 
+            { 
+                CommentEf = c, 
+                ThreadTitle = c.ThreadEf.Title, 
+                RealmShortName = c.ThreadEf.ForumEf.ShortName 
+            })
+            .ToListAsync(cancellationToken);
+
+        var result = comments.Select(c => (
+            Comment: _mapper.Map<Comment>(c.CommentEf),
+            ThreadTitle: c.ThreadTitle,
+            RealmShortName: c.RealmShortName
+        )).ToList();
+
+        return (result, totalCount);
     }
 }

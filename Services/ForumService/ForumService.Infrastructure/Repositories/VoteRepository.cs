@@ -9,7 +9,7 @@ using StackExchange.Redis;
 
 namespace ForumService.ForumService.Infrastructure.Repositories;
 
-public class VoteRepository : IVoteRepository
+public class VoteRepository : IVoteRepository, IVoteQueryRepository
 {
     private readonly ForumDbContext _context;
     private readonly IDatabase _redis;

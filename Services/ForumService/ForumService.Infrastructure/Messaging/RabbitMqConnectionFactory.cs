@@ -21,7 +21,6 @@ public class RabbitMqConnectionFactory(IConnectionFactory connectionFactory) : I
 
             if (_connection == null)
             {
-                await _semaphore.WaitAsync(cancellationToken);
                 _connection = await connectionFactory.CreateConnectionAsync(cancellationToken);
             }
         }

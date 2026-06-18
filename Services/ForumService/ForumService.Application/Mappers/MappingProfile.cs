@@ -15,7 +15,8 @@ public class MappingProfile : Profile
         CreateMap<Forum, ForumDto>();
         CreateMap<ForumTagCatalogEf, ForumTagDto>();
         CreateMap<ForumThread, ForumThreadDto>()
-            .ForMember(dest => dest.Vote, opt => opt.Ignore());
+            .ForMember(dest => dest.Vote, opt => opt.Ignore())
+            .ForMember(dest => dest.UserPollVote, opt => opt.Ignore());
         CreateMap<Poll, PollItemDto>();
         CreateMap<Comment, CommentDto>()
             .ForMember(dest => dest.Vote, opt => opt.Ignore());
@@ -28,6 +29,7 @@ public class MappingProfile : Profile
         CreateMap<PollEf, Poll>();
         CreateMap<TagEf, Tag>();
         CreateMap<ThreadVoteEf, ThreadVote>();
+        CreateMap<PollVoteEf, PollVote>();
         CreateMap<ForumUserEf, ForumUser>()
             .ForMember(dest => dest.Forum, opt => opt.MapFrom(src => src.ForumEf));
         CreateMap<ForumUser, ForumUserEf>();
@@ -39,6 +41,7 @@ public class MappingProfile : Profile
             .ForMember(d => d.Id, o => o.Ignore());
         CreateMap<Poll, PollEf>();
         CreateMap<ThreadVote, ThreadVoteEf>();
+        CreateMap<PollVote, PollVoteEf>();
         CreateMap<CommentVote, CommentVoteEf>();
         
         CreateMap<ProfileResponse, UserDto>().ConvertUsing(s => MapProfileResponseToUserDto(s));

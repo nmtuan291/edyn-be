@@ -4,4 +4,4 @@ namespace ForumService.ForumService.Infrastructure.Messaging;
 
 public class TelemetryBuffer(BoundedChannelOptions options) : BoundedChannelBuffer<TelemetryLog>(options) { }
 
-public record TelemetryLog(string Placeholder);
+public record TelemetryLog(Guid UserId, Guid ForumId, Guid PostId, string IpAddress, bool IsFirstPage);

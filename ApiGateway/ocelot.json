@@ -4,19 +4,32 @@
       "DownstreamPathTemplate": "/api/user/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "localhost", "Port": 5161 }
+        {
+          "Host": "localhost",
+          "Port": 5161
+        }
       ],
       "UpstreamPathTemplate": "/users/{everything}",
-      "UpstreamHttpMethod": [ "GET", "OPTIONS" ]
+      "UpstreamHttpMethod": [
+        "GET",
+        "OPTIONS"
+      ]
     },
     {
       "DownstreamPathTemplate": "/api/user/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "localhost", "Port": 5161 }
+        {
+          "Host": "localhost",
+          "Port": 5161
+        }
       ],
       "UpstreamPathTemplate": "/users/{everything}",
-      "UpstreamHttpMethod": [ "POST", "PUT", "DELETE" ],
+      "UpstreamHttpMethod": [
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer"
       }
@@ -25,55 +38,103 @@
       "DownstreamPathTemplate": "/api/forum/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "localhost", "Port": 5220 }
+        {
+          "Host": "localhost",
+          "Port": 5220
+        }
       ],
       "UpstreamPathTemplate": "/forum/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE", "OPTIONS" ]
+      "UpstreamHttpMethod": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE",
+        "OPTIONS"
+      ]
     },
     {
       "DownstreamPathTemplate": "/api/forumthread/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "localhost", "Port": 5220 }
+        {
+          "Host": "localhost",
+          "Port": 5220
+        }
       ],
       "UpstreamPathTemplate": "/forumthread/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE", "OPTIONS" ]
+      "UpstreamHttpMethod": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE",
+        "OPTIONS"
+      ]
     },
     {
       "DownstreamPathTemplate": "/api/feed/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "localhost", "Port": 5220 }
+        {
+          "Host": "localhost",
+          "Port": 5220
+        }
       ],
       "UpstreamPathTemplate": "/feed/{everything}",
-      "UpstreamHttpMethod": [ "GET", "OPTIONS" ]
+      "UpstreamHttpMethod": [
+        "GET",
+        "OPTIONS"
+      ]
     },
     {
       "DownstreamPathTemplate": "/api/account/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "localhost", "Port": 5299 }
+        {
+          "Host": "localhost",
+          "Port": 5299
+        }
       ],
       "UpstreamPathTemplate": "/auth/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE", "OPTIONS" ]
+      "UpstreamHttpMethod": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE",
+        "OPTIONS"
+      ]
     },
     {
       "DownstreamPathTemplate": "/.well-known/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "localhost", "Port": 5299 }
+        {
+          "Host": "localhost",
+          "Port": 5299
+        }
       ],
       "UpstreamPathTemplate": "/.well-known/{everything}",
-      "UpstreamHttpMethod": [ "GET", "OPTIONS" ]
+      "UpstreamHttpMethod": [
+        "GET",
+        "OPTIONS"
+      ]
     },
     {
       "DownstreamPathTemplate": "/hubs/notification/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "localhost", "Port": 5190 }
+        {
+          "Host": "localhost",
+          "Port": 5190
+        }
       ],
       "UpstreamPathTemplate": "/hubs/notification/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE", "OPTIONS" ],
+      "UpstreamHttpMethod": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE",
+        "OPTIONS"
+      ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer"
       }
@@ -82,10 +143,19 @@
       "DownstreamPathTemplate": "/hubs/chat/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "localhost", "Port": 5033 }
+        {
+          "Host": "localhost",
+          "Port": 5033
+        }
       ],
       "UpstreamPathTemplate": "/hubs/chat/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE", "OPTIONS" ],
+      "UpstreamHttpMethod": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE",
+        "OPTIONS"
+      ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer"
       }
@@ -94,10 +164,17 @@
       "DownstreamPathTemplate": "/api/notification/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "localhost", "Port": 5190 }
+        {
+          "Host": "localhost",
+          "Port": 5190
+        }
       ],
       "UpstreamPathTemplate": "/notifications/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "OPTIONS" ],
+      "UpstreamHttpMethod": [
+        "GET",
+        "POST",
+        "OPTIONS"
+      ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer"
       }
@@ -106,10 +183,17 @@
       "DownstreamPathTemplate": "/api/chat/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "localhost", "Port": 5033 }
+        {
+          "Host": "localhost",
+          "Port": 5033
+        }
       ],
       "UpstreamPathTemplate": "/chat/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "OPTIONS" ],
+      "UpstreamHttpMethod": [
+        "GET",
+        "POST",
+        "OPTIONS"
+      ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer"
       }

@@ -10,7 +10,7 @@ namespace ForumService.ForumService.Application.Interfaces.Repositories
         Task<Forum?> GetForumByIdAsync(Guid forumId, CancellationToken cancellationToken = default);
         Task<List<Forum>> GetForumsAsync(CancellationToken cancellationToken = default);
         Task InsertUserToForumAsync(Guid forumId, Guid userId, ForumRole role);
-        Task<Forum?> GetForumByNameAsync(string name, CancellationToken cancellationToken = default);
+        Task<Forum?> GetForumByNameAsync(Guid userId, string name, CancellationToken cancellationToken = default);
         Task<ForumUser?> GetForumUserAsync(Guid forumId, Guid userId, CancellationToken cancellationToken = default);
         Task UpdateForumUserAsync(ForumUser forumUser);
         Task RemoveForumUserAsync(Guid forumId, Guid userId);
@@ -20,11 +20,13 @@ namespace ForumService.ForumService.Application.Interfaces.Repositories
         Task<Dictionary<Guid, (string Name, string Image)>> GetForumInfoByIdsAsync(IEnumerable<Guid> forumIds, CancellationToken cancellationToken = default);
 
         Task SetCachedPermissionsAsync(Guid forumId, Guid userId, int permissions);
-        Task<int?> GetCachedPermissionsAsync(Guid forumId, Guid userId);
+        ValueTask<int?> GetCachedPermissionsAsync(Guid forumId, Guid userId);
         Task InvalidateCachedPermissionsAsync(Guid forumId, Guid userId);
 
         Task<List<ForumTagDto>> GetForumTagCatalogAsync(Guid forumId, CancellationToken cancellationToken = default);
         Task<bool> AddForumTagCatalogIfNotExistsAsync(Guid forumId, string name, string color);
         Task<List<Forum>> SearchForumsAsync(string query, CancellationToken cancellationToken = default);
+        ValueTask<List<Forum>> GetRecentVisitForumsAsync(Guid userId, CancellationToken cancellationToken = default);
+        Task WriteVisitAsync(Guid userId, Guid forumId, CancellationToken cancellationToken = default);
     }
 }

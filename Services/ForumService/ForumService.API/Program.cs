@@ -4,6 +4,7 @@ using ForumService.ForumService.Application.Permissions;
 using ForumService.ForumService.Infrastructure.UnitOfWork;
 using ForumService.ForumService.API.Middlewares;
 using ForumService.ForumService.Application;
+using ForumService.ForumService.Application.Behaviors;
 using ForumService.ForumService.Application.Interfaces.Repositories;
 using ForumService.ForumService.Application.Interfaces.Services;
 using Microsoft.EntityFrameworkCore;
@@ -18,6 +19,7 @@ using OpenTelemetry.Trace;
 using RabbitMQ.Client;
 using System.Threading.Channels;
 using ForumService.ForumService.Infrastructure.Messaging;
+using Microsoft.AspNetCore.HttpOverrides;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,6 +27,11 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+builder.Services.AddMediatR(cfg =>
+{
+    cfg.RegisterServicesFromAssembly(typeof(ApplicationAssemblyMarker).Assembly);
+    cfg.AddOpenBehavior(typeof(RecordForumVisitBehavior<,>));
+});
 builder.Services.AddEdynTelemetry(builder.Configuration, "edyn-forum-service", tracing =>
 {
     tracing.AddEntityFrameworkCoreInstrumentation();
@@ -38,12 +45,14 @@ builder.Services.AddDbContext<ForumDbContext>(options => options.UseNpgsql(build
 
 // Add dependency
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-builder.Services.AddScoped<IForumThreadService, ForumThreadService>();
-builder.Services.AddScoped<IForumService, ForumService.ForumService.Application.ForumService>();
 builder.Services.AddScoped<IThreadRepository, ThreadRepository>();
+builder.Services.AddScoped<IThreadQueryRepository, ThreadRepository>();
 builder.Services.AddScoped<IForumRepository, ForumRepository>();
+builder.Services.AddScoped<IForumQueryRepository, ForumRepository>();
+builder.Services.AddScoped<ICommentQueryRepository, CommentRepository>();
+builder.Services.AddScoped<IVoteRepository, VoteRepository>();
+builder.Services.AddScoped<IVoteQueryRepository, VoteRepository>();
 builder.Services.AddScoped<ICommentNotificationSender, CommentNotificationSender>();
-builder.Services.AddScoped<IHomeFeedService, HomeFeedService>();
 builder.Services.AddForumRolePermissionStrategies();
 builder.Services.AddScoped<IPermissionService, PermissionService>();
 
@@ -67,8 +76,10 @@ builder.Services.AddSingleton<IConnectionFactory>(sp =>
     return factory;
 });
 builder.Services.AddSingleton<RabbitMqConnectionFactory>();
-builder.Services.AddSingleton(new BoundedChannelOptions(1000) { FullMode = BoundedChannelFullMode.DropWrite });
-builder.Services.AddSingleton<BoundedChannelBuffer<TelemetryLog>, TelemetryBuffer>();
+// builder.Services.AddSingleton(new BoundedChannelOptions(1000) { FullMode = BoundedChannelFullMode.DropWrite });
+builder.Services.AddSingleton<BoundedChannelBuffer<TelemetryLog>, TelemetryBuffer>(
+    sp => new TelemetryBuffer(new BoundedChannelOptions(1000) { FullMode = BoundedChannelFullMode.DropWrite })
+);
 builder.Services.AddHostedService<TelemetryPublisherService>();
 
 builder.Services.AddAuthentication("Bearer")
@@ -124,6 +135,16 @@ if (app.Environment.IsDevelopment())
 app.UseMiddleware<ErrorHandlingMiddleware>();
 
 app.UseHttpsRedirection();
+
+var forwardedOptions = new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+};
+
+forwardedOptions.KnownNetworks.Clear();
+forwardedOptions.KnownProxies.Clear();
+
+app.UseForwardedHeaders(forwardedOptions);
 
 app.UseAuthentication();
 app.UseAuthorization();

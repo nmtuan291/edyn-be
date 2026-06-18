@@ -1,8 +1,24 @@
 using System.Security.Claims;
 using ForumService.ForumService.Application.DTOs;
 using ForumService.ForumService.Application.Exceptions;
-using ForumService.ForumService.Application.Interfaces.Services;
+using ForumService.ForumService.Application.Features.Forums.Commands.CreateForum;
+using ForumService.ForumService.Application.Features.Forums.Commands.CreateForumTag;
+using ForumService.ForumService.Application.Features.Forums.Commands.JoinForum;
+using ForumService.ForumService.Application.Features.Forums.Commands.LeaveForum;
+using ForumService.ForumService.Application.Features.Forums.Commands.RemoveMember;
+using ForumService.ForumService.Application.Features.Forums.Commands.SetMemberPermissions;
+using ForumService.ForumService.Application.Features.Forums.Commands.SetMemberRole;
+using ForumService.ForumService.Application.Features.Forums.Queries.GetForumByName;
+using ForumService.ForumService.Application.Features.Forums.Queries.GetForumMembers;
+using ForumService.ForumService.Application.Features.Forums.Queries.GetForums;
+using ForumService.ForumService.Application.Features.Forums.Queries.GetForumTags;
+using ForumService.ForumService.Application.Features.Forums.Queries.GetJoinedForums;
+using ForumService.ForumService.Application.Features.Forums.Queries.GetMemberPermissions;
+using ForumService.ForumService.Application.Features.Forums.Queries.GetRecentForums;
+using ForumService.ForumService.Application.Features.Forums.Queries.GetUserPermission;
+using ForumService.ForumService.Application.Features.Forums.Queries.SearchForums;
 using ForumService.ForumService.Application.Requests;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,19 +28,17 @@ namespace ForumService.ForumService.API.Controllers
     [ApiController]
     public class ForumController : ControllerBase
     {
-        private readonly IForumService _forumService;
-        private readonly IPermissionService _permissionService;
+        private readonly IMediator _mediator;
 
-        public ForumController(IForumService forumService, IPermissionService permissionService)
+        public ForumController(IMediator mediator)
         {
-            _forumService = forumService;
-            _permissionService = permissionService;
+            _mediator = mediator;
         }
 
         [HttpGet]
         public async Task<ActionResult<List<ForumDto>>> GetAllForums(CancellationToken cancellationToken)
         {
-            var forums = await _forumService.GetForums(cancellationToken);
+            var forums = await _mediator.Send(new GetForumsQuery(), cancellationToken);
             return Ok(forums);
         }
 
@@ -35,7 +49,7 @@ namespace ForumService.ForumService.API.Controllers
             if (string.IsNullOrWhiteSpace(q))
                 return Ok(new List<ForumDto>());
 
-            var forums = await _forumService.SearchForums(q, cancellationToken);
+            var forums = await _mediator.Send(new SearchForumsQuery(q), cancellationToken);
             return Ok(forums);
         }
 
@@ -47,7 +61,7 @@ namespace ForumService.ForumService.API.Controllers
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized();
 
-            var createdForum = await _forumService.AddForum(forumDto, userId);
+            var createdForum = await _mediator.Send(new CreateForumCommand(forumDto, Guid.Parse(userId)));
 
             if (createdForum == null)
                 return StatusCode(StatusCodes.Status500InternalServerError, "Failed to create forum");
@@ -66,7 +80,7 @@ namespace ForumService.ForumService.API.Controllers
             if (!Guid.TryParse(forumId, out var forumGuidParsed))
                 return BadRequest("Invalid forum ID");
 
-            await _forumService.AddUserToForum(forumGuidParsed, Guid.Parse(userId));
+            await _mediator.Send(new JoinForumCommand(forumGuidParsed, Guid.Parse(userId)));
             return Ok();
         }
 
@@ -83,7 +97,7 @@ namespace ForumService.ForumService.API.Controllers
 
             try
             {
-                await _forumService.LeaveForumAsync(forumGuidParsed, Guid.Parse(userId));
+                await _mediator.Send(new LeaveForumCommand(forumGuidParsed, Guid.Parse(userId)));
                 return Ok();
             }
             catch (InvalidOperationException ex)
@@ -95,10 +109,15 @@ namespace ForumService.ForumService.API.Controllers
         [HttpGet("{forumName}")]
         public async Task<ActionResult<ForumDto>> GetForum(string forumName, CancellationToken cancellationToken)
         {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            Guid.TryParse(userId,  out var parsedUserId);
+            
             if (string.IsNullOrEmpty(forumName))
                 return BadRequest("Invalid forum name");
 
-            ForumDto? forum = await _forumService.GetForum(forumName, cancellationToken);
+            ForumDto? forum = await _mediator.Send(
+                new GetForumByNameQuery(parsedUserId, forumName),
+                cancellationToken);
             return forum == null ? NotFound() : forum;
         }
 
@@ -113,7 +132,9 @@ namespace ForumService.ForumService.API.Controllers
             if (!Guid.TryParse(userId, out var userGuid))
                 return Unauthorized("Invalid user ID");
 
-            var permissions = await _forumService.GetUserPermission(forumGuid, userGuid, cancellationToken);
+            var permissions = await _mediator.Send(
+                new GetUserPermissionQuery(forumGuid, userGuid),
+                cancellationToken);
             return Ok(permissions);
         }
 
@@ -123,7 +144,7 @@ namespace ForumService.ForumService.API.Controllers
         {
             try
             {
-                var tags = await _forumService.GetForumTagsAsync(forumId, cancellationToken);
+                var tags = await _mediator.Send(new GetForumTagsQuery(forumId), cancellationToken);
                 return Ok(tags);
             }
             catch (ForumNotFoundException)
@@ -142,7 +163,7 @@ namespace ForumService.ForumService.API.Controllers
 
             try
             {
-                var created = await _forumService.CreateForumTagAsync(forumId, request, userGuid);
+                var created = await _mediator.Send(new CreateForumTagCommand(forumId, request, userGuid));
                 return Ok(created);
             }
             catch (ForumNotFoundException)
@@ -171,7 +192,22 @@ namespace ForumService.ForumService.API.Controllers
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized();
 
-            var forums = await _forumService.GetJoinedForums(Guid.Parse(userId), cancellationToken);
+            var forums = await _mediator.Send(new GetJoinedForumsQuery(Guid.Parse(userId)), cancellationToken);
+            return forums;
+        }
+
+        [Authorize]
+        [HttpGet("recent")]
+        public async Task<ActionResult<List<ForumDto>>> GetRecentForums(CancellationToken cancellationToken)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            
+            if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var parsedUserId))
+            {
+                return Unauthorized();
+            }
+            
+            var forums = await _mediator.Send(new GetRecentForumsQuery(parsedUserId), cancellationToken);
             return forums;
         }
 
@@ -181,7 +217,7 @@ namespace ForumService.ForumService.API.Controllers
         [HttpGet("{forumId}/members")]
         public async Task<ActionResult<List<ForumMemberDto>>> GetForumMembers(Guid forumId, CancellationToken cancellationToken)
         {
-            var members = await _forumService.GetForumMembers(forumId, cancellationToken);
+            var members = await _mediator.Send(new GetForumMembersQuery(forumId), cancellationToken);
             return Ok(members);
         }
 
@@ -193,17 +229,13 @@ namespace ForumService.ForumService.API.Controllers
             if (!Guid.TryParse(userId, out var userGuid))
                 return Unauthorized();
 
-            var isSelf = userGuid == targetUserId;
-            if (!isSelf)
-            {
-                var hasPermission = await _permissionService.HasPermissionAsync(
-                    forumId, userGuid, Application.Enums.ForumPermissionType.ManageRoles, cancellationToken);
-                if (!hasPermission)
-                    return Forbid();
-            }
+            var result = await _mediator.Send(
+                new GetMemberPermissionsQuery(forumId, targetUserId, userGuid),
+                cancellationToken);
+            if (result.Forbidden)
+                return Forbid();
 
-            var permissions = await _forumService.GetUserPermission(forumId, targetUserId, cancellationToken);
-            return Ok(permissions);
+            return Ok(result.Permissions);
         }
 
         [Authorize]
@@ -216,8 +248,7 @@ namespace ForumService.ForumService.API.Controllers
 
             try
             {
-                await _permissionService.SetUserRoleAsync(
-                    new ForumMemberRoleUpdate(forumId, targetUserId, request.Role, userGuid));
+                await _mediator.Send(new SetMemberRoleCommand(forumId, targetUserId, request.Role, userGuid));
                 return Ok();
             }
             catch (UnauthorizedAccessException ex)
@@ -241,9 +272,11 @@ namespace ForumService.ForumService.API.Controllers
 
             try
             {
-                await _permissionService.SetPermissionOverridesAsync(
-                    new ForumMemberPermissionOverridesUpdate(
-                        forumId, targetUserId, request.Permissions, userGuid));
+                await _mediator.Send(new SetMemberPermissionsCommand(
+                    forumId,
+                    targetUserId,
+                    request.Permissions,
+                    userGuid));
                 return Ok();
             }
             catch (UnauthorizedAccessException ex)
@@ -266,7 +299,7 @@ namespace ForumService.ForumService.API.Controllers
 
             try
             {
-                await _forumService.RemoveForumMember(forumId, targetUserId, userGuid);
+                await _mediator.Send(new RemoveMemberCommand(forumId, targetUserId, userGuid));
                 return Ok();
             }
             catch (UnauthorizedAccessException ex)

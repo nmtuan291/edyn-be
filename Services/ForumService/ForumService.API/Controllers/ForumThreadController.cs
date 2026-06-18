@@ -1,8 +1,22 @@
 using System.Security.Claims;
 using ForumService.ForumService.Application.DTOs;
 using ForumService.ForumService.Application.Enums;
-using ForumService.ForumService.Application.Interfaces.Services;
+using ForumService.ForumService.Application.Features.Comments.Commands.AddComment;
+using ForumService.ForumService.Application.Features.Comments.Commands.DeleteComment;
+using ForumService.ForumService.Application.Features.Comments.Commands.EditComment;
+using ForumService.ForumService.Application.Features.Comments.Commands.VoteComment;
+using ForumService.ForumService.Application.Features.Threads.Commands.CreateThread;
+using ForumService.ForumService.Application.Features.Threads.Commands.DeleteThread;
+using ForumService.ForumService.Application.Features.Threads.Commands.EditThread;
+using ForumService.ForumService.Application.Features.Threads.Commands.PinThread;
+using ForumService.ForumService.Application.Features.Threads.Commands.VotePoll;
+using ForumService.ForumService.Application.Features.Threads.Commands.VoteThread;
+using ForumService.ForumService.Application.Features.Threads.Queries.GetComments;
+using ForumService.ForumService.Application.Features.Threads.Queries.GetForumThreads;
+using ForumService.ForumService.Application.Features.Threads.Queries.GetThreadById;
+using ForumService.ForumService.Application.Features.Threads.Queries.SearchThreads;
 using ForumService.ForumService.Application.Requests;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,13 +26,11 @@ namespace ForumService.ForumService.API.Controllers
     [Route("api/[controller]")]
     public class ForumThreadController : ControllerBase
     {
-        private readonly IForumThreadService _forumThreadService;
-        private readonly IPermissionService _permissionService;
+        private readonly IMediator _mediator;
 
-        public ForumThreadController(IForumThreadService forumThreadService, IPermissionService permissionService)
+        public ForumThreadController(IMediator mediator)
         {
-            _forumThreadService = forumThreadService;
-            _permissionService = permissionService;
+            _mediator = mediator;
         }
 
         [Authorize]
@@ -30,11 +42,11 @@ namespace ForumService.ForumService.API.Controllers
                 return Unauthorized("Invalid user id");
 
             var userGuid = Guid.Parse(userId);
-            if (!await _permissionService.HasPermissionAsync(forumThread.ForumId, userGuid, ForumPermissionType.CreateThread))
+            var result = await _mediator.Send(new CreateThreadCommand(forumThread, userGuid));
+            if (result.Forbidden)
                 return Forbid();
 
-            var created = await _forumThreadService.CreateForumThread(forumThread, userGuid);
-            return Ok(created);
+            return Ok(result.Thread);
         }
 
         [AllowAnonymous]
@@ -51,8 +63,9 @@ namespace ForumService.ForumService.API.Controllers
             if (pageSize is < 1 or > 50) pageSize = 10;
 
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var result = await _forumThreadService.GetThreadsByForumIdPaged(
-                new ForumThreadListQuery(forumId, userId, page, pageSize, sortBy, sortDate), cancellationToken);
+            var result = await _mediator.Send(
+                new GetForumThreadsQuery(forumId, userId, page, pageSize, sortBy, sortDate),
+                cancellationToken);
             return Ok(result);
         }
 
@@ -70,14 +83,15 @@ namespace ForumService.ForumService.API.Controllers
             if (page < 1) page = 1;
             if (pageSize is < 1 or > 50) pageSize = 10;
 
-            var result = await _forumThreadService.SearchThreads(q, page, pageSize, cancellationToken);
+            var result = await _mediator.Send(new SearchThreadsQuery(q, page, pageSize), cancellationToken);
             return Ok(result);
         }
 
         [HttpGet("thread/{threadId}")]
         public async Task<ActionResult<ForumThreadDto>> GetThreadById(Guid threadId, CancellationToken cancellationToken)
         {
-            var thread = await _forumThreadService.GetThreadById(threadId, cancellationToken);
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var thread = await _mediator.Send(new GetThreadByIdQuery(threadId, userId), cancellationToken);
             if (thread == null)
                 return NotFound("Thread not found");
             return Ok(thread);
@@ -93,15 +107,13 @@ namespace ForumService.ForumService.API.Controllers
                 return Unauthorized("Invalid user id");
 
             var userGuid = Guid.Parse(userId);
-            var thread = await _forumThreadService.GetThreadById(comment.ThreadId);
-            if (thread == null)
-                return NotFound("Thread not found");
-
-            if (!await _permissionService.HasPermissionAsync(thread.ForumId, userGuid, ForumPermissionType.CreateComment))
-                return Forbid();
-
-            await _forumThreadService.InsertComment(comment, userGuid, username);
-            return Ok();
+            var result = await _mediator.Send(new AddCommentCommand(comment, userGuid, username));
+            return result switch
+            {
+                AddCommentResult.ThreadNotFound => NotFound("Thread not found"),
+                AddCommentResult.Forbidden => Forbid(),
+                _ => Ok(),
+            };
         }
 
         [AllowAnonymous]
@@ -109,7 +121,7 @@ namespace ForumService.ForumService.API.Controllers
         public async Task<ActionResult<List<CommentDto>>> GetComments(Guid threadId, CancellationToken cancellationToken)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var comments = await _forumThreadService.GetCommentsByThreadId(threadId, userId, cancellationToken);
+            var comments = await _mediator.Send(new GetCommentsQuery(threadId, userId), cancellationToken);
             return Ok(comments);
         }
 
@@ -126,17 +138,14 @@ namespace ForumService.ForumService.API.Controllers
                 return BadRequest("Thread id is required (send \"id\" or \"threadId\" from create thread or list threads).");
 
             var userGuid = Guid.Parse(userId);
-            var thread = await _forumThreadService.GetThreadById(threadId);
-            if (thread == null)
-                return NotFound("Thread not found");
-
-            if (!await _permissionService.HasPermissionAsync(thread.ForumId, userGuid, ForumPermissionType.Vote))
+            var result = await _mediator.Send(
+                new VoteThreadCommand(threadId, userGuid, voteRequest.GetIsDownvote()));
+            if (result.Forbidden)
                 return Forbid();
 
-            var result = await _forumThreadService.UpdateThreadVote(threadId, userGuid, voteRequest.GetIsDownvote());
-            if (result == null)
+            if (result.Thread == null)
                 return NotFound("Thread not found");
-            return Ok(result);
+            return Ok(result.Thread);
         }
 
         [Authorize]
@@ -153,7 +162,8 @@ namespace ForumService.ForumService.API.Controllers
 
             var userGuid = Guid.Parse(userId);
 
-            var result = await _forumThreadService.UpdateCommentVote(commentId, userGuid, voteRequest.GetIsDownvote());
+            var result = await _mediator.Send(
+                new VoteCommentCommand(commentId, userGuid, voteRequest.GetIsDownvote()));
             if (result == null)
                 return NotFound("Comment not found");
             return Ok(result);
@@ -167,7 +177,21 @@ namespace ForumService.ForumService.API.Controllers
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized();
 
-            var result = await _forumThreadService.EditThread(threadId, Guid.Parse(userId), request);
+            var result = await _mediator.Send(new EditThreadCommand(threadId, Guid.Parse(userId), request));
+            if (result == null)
+                return NotFound("Thread not found");
+            return Ok(result);
+        }
+
+        [Authorize]
+        [HttpPut("thread/{threadId}/pin")]
+        public async Task<ActionResult<ForumThreadDto?>> PinThread(Guid threadId, [FromBody] PinThreadRequest request)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            var result = await _mediator.Send(new PinThreadCommand(threadId, Guid.Parse(userId), request.IsPinned));
             if (result == null)
                 return NotFound("Thread not found");
             return Ok(result);
@@ -181,7 +205,7 @@ namespace ForumService.ForumService.API.Controllers
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized();
 
-            await _forumThreadService.DeleteThread(threadId, Guid.Parse(userId));
+            await _mediator.Send(new DeleteThreadCommand(threadId, Guid.Parse(userId)));
             return Ok();
         }
 
@@ -193,7 +217,7 @@ namespace ForumService.ForumService.API.Controllers
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized();
 
-            var result = await _forumThreadService.EditComment(commentId, Guid.Parse(userId), request);
+            var result = await _mediator.Send(new EditCommentCommand(commentId, Guid.Parse(userId), request));
             if (result == null)
                 return NotFound("Comment not found");
             return Ok(result);
@@ -207,7 +231,7 @@ namespace ForumService.ForumService.API.Controllers
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized();
 
-            await _forumThreadService.DeleteComment(commentId, Guid.Parse(userId));
+            await _mediator.Send(new DeleteCommentCommand(commentId, Guid.Parse(userId)));
             return Ok();
         }
 
@@ -222,7 +246,8 @@ namespace ForumService.ForumService.API.Controllers
             if (request.ThreadId == Guid.Empty || string.IsNullOrWhiteSpace(request.PollContent))
                 return BadRequest("ThreadId and PollContent are required.");
 
-            var result = await _forumThreadService.VotePoll(request.ThreadId, request.PollContent);
+            var result = await _mediator.Send(
+                new VotePollCommand(Guid.Parse(userId), request.ThreadId, request.PollContent));
             if (result == null)
                 return NotFound("Thread or poll item not found.");
             return Ok(result);
