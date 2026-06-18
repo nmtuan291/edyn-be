@@ -8,6 +8,7 @@ using ForumService.ForumService.Application.Features.Comments.Commands.VoteComme
 using ForumService.ForumService.Application.Features.Threads.Commands.CreateThread;
 using ForumService.ForumService.Application.Features.Threads.Commands.DeleteThread;
 using ForumService.ForumService.Application.Features.Threads.Commands.EditThread;
+using ForumService.ForumService.Application.Features.Threads.Commands.PinThread;
 using ForumService.ForumService.Application.Features.Threads.Commands.VotePoll;
 using ForumService.ForumService.Application.Features.Threads.Commands.VoteThread;
 using ForumService.ForumService.Application.Features.Threads.Queries.GetComments;
@@ -177,6 +178,20 @@ namespace ForumService.ForumService.API.Controllers
                 return Unauthorized();
 
             var result = await _mediator.Send(new EditThreadCommand(threadId, Guid.Parse(userId), request));
+            if (result == null)
+                return NotFound("Thread not found");
+            return Ok(result);
+        }
+
+        [Authorize]
+        [HttpPut("thread/{threadId}/pin")]
+        public async Task<ActionResult<ForumThreadDto?>> PinThread(Guid threadId, [FromBody] PinThreadRequest request)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            var result = await _mediator.Send(new PinThreadCommand(threadId, Guid.Parse(userId), request.IsPinned));
             if (result == null)
                 return NotFound("Thread not found");
             return Ok(result);

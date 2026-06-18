@@ -9,4 +9,6 @@ public record EditThreadRequest
 
     [StringLength(50000, MinimumLength = 1)]
     public string? Content { get; init; }
+
+    public ICollection<string>? Videos { get; init; }
 }

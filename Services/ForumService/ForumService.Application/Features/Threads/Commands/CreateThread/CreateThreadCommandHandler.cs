@@ -56,6 +56,7 @@ public sealed class CreateThreadCommandHandler : IRequestHandler<CreateThreadCom
             IsPinned = request.Thread.IsPinned,
             LastUpdatedAt = DateTime.UtcNow,
             Images = request.Thread.Images,
+            Videos = request.Thread.Videos,
             PollItems = request.Thread.PollItems?.Select(p => new Poll
             {
                 ThreadId = threadId,

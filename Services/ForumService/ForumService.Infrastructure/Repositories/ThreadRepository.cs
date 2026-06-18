@@ -93,7 +93,7 @@ namespace ForumService.ForumService.Infrastructure.Repositories
             return _mapper.Map<ForumThread>(thread);
         }
         
-        public async Task<List<ForumThread>> GetHomeFeedCandidatesAsync(List<Guid>? forumIds, int count, DateTime cutoff, CancellationToken cancellationToken = default)
+        public async Task<List<ForumThread>> GetHomeFeedCandidatesAsync(List<Guid>? forumIds, int count, DateTime cutoff, SortBy sortBy = SortBy.Hot, CancellationToken cancellationToken = default)
         {
             var query = _context.Threads
                 .AsNoTracking()
@@ -105,9 +105,13 @@ namespace ForumService.ForumService.Infrastructure.Repositories
             if (forumIds is { Count: > 0 })
                 query = query.Where(t => forumIds.Contains(t.ForumId));
 
+            // For "Latest", fetch the most recent candidates; otherwise the most
+            // upvoted ones so the hot-score ranking has high-engagement material.
+            query = sortBy == SortBy.Latest
+                ? query.OrderByDescending(t => t.CreatedAt)
+                : query.OrderByDescending(t => t.Upvote).ThenByDescending(t => t.CreatedAt);
+
             var candidates = await query
-                .OrderByDescending(t => t.Upvote)
-                .ThenByDescending(t => t.CreatedAt)
                 .Take(count)
                 .ToListAsync(cancellationToken);
 

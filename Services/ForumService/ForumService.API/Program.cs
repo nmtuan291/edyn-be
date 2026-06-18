@@ -4,6 +4,7 @@ using ForumService.ForumService.Application.Permissions;
 using ForumService.ForumService.Infrastructure.UnitOfWork;
 using ForumService.ForumService.API.Middlewares;
 using ForumService.ForumService.Application;
+using ForumService.ForumService.Application.Behaviors;
 using ForumService.ForumService.Application.Interfaces.Repositories;
 using ForumService.ForumService.Application.Interfaces.Services;
 using Microsoft.EntityFrameworkCore;
@@ -29,6 +30,7 @@ builder.Services.AddOpenApi();
 builder.Services.AddMediatR(cfg =>
 {
     cfg.RegisterServicesFromAssembly(typeof(ApplicationAssemblyMarker).Assembly);
+    cfg.AddOpenBehavior(typeof(RecordForumVisitBehavior<,>));
 });
 builder.Services.AddEdynTelemetry(builder.Configuration, "edyn-forum-service", tracing =>
 {

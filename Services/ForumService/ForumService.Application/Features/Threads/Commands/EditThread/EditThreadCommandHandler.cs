@@ -29,6 +29,8 @@ public sealed class EditThreadCommandHandler : IRequestHandler<EditThreadCommand
             thread.Title = request.Request.Title;
         if (request.Request.Content != null)
             thread.Content = request.Request.Content;
+        if (request.Request.Videos != null)
+            thread.Videos = request.Request.Videos;
 
         thread.LastUpdatedAt = DateTime.UtcNow;
 

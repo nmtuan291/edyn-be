@@ -24,6 +24,7 @@ namespace ForumService.ForumService.Application.DTOs
         public ICollection<Tag>? Tags { get; init; }
         public ICollection<PollItemDto>? PollItems { get; init; }
         public ICollection<string>? Images { get; init; }
+        public ICollection<string>? Videos { get; init; }
 
         [Required]
         [StringLength(50000, MinimumLength = 1)]

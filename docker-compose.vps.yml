@@ -2,7 +2,15 @@ services:
   postgres:
     image: postgres:17
     container_name: postgres_db
+    command: >
+      postgres
+      -c shared_buffers=256MB
+      -c work_mem=4MB
+      -c maintenance_work_mem=64MB
+      -c effective_cache_size=768MB
+      -c max_connections=50
     restart: always
+    mem_limit: 1g
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres

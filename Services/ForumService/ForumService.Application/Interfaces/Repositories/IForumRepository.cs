@@ -27,5 +27,6 @@ namespace ForumService.ForumService.Application.Interfaces.Repositories
         Task<bool> AddForumTagCatalogIfNotExistsAsync(Guid forumId, string name, string color);
         Task<List<Forum>> SearchForumsAsync(string query, CancellationToken cancellationToken = default);
         ValueTask<List<Forum>> GetRecentVisitForumsAsync(Guid userId, CancellationToken cancellationToken = default);
+        Task WriteVisitAsync(Guid userId, Guid forumId, CancellationToken cancellationToken = default);
     }
 }

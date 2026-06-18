@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using ForumService.ForumService.Application.DTOs;
+using ForumService.ForumService.Application.Enums;
 using ForumService.ForumService.Application.Features.Feeds.Queries.GetHomeFeed;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -23,13 +24,15 @@ public class FeedController : ControllerBase
     public async Task<ActionResult<List<ForumThreadDto>>> GetHomeFeed(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
+        [FromQuery] SortBy sort = SortBy.Hot,
+        [FromQuery] SortDate date = SortDate.All,
         CancellationToken cancellationToken = default)
     {
         if (page < 1) page = 1;
         if (pageSize is < 1 or > 50) pageSize = 20;
 
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        var feed = await _mediator.Send(new GetHomeFeedQuery(userId, page, pageSize), cancellationToken);
+        var feed = await _mediator.Send(new GetHomeFeedQuery(userId, page, pageSize, sort, date), cancellationToken);
         return Ok(feed);
     }
 }

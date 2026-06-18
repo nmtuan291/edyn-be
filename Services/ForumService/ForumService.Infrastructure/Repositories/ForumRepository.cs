@@ -44,9 +44,6 @@ namespace ForumService.ForumService.Infrastructure.Repositories
                 .Where(f => f.Name.ToLower() == name.ToLower() || f.ShortName.ToLower() == name.ToLower())
                 .FirstOrDefaultAsync(cancellationToken);
             
-            /*if (forum != null && userId != Guid.Empty)
-                await _redis.WriteVisitForum(userId, forum);*/
-            
             return _mapper.Map<Forum>(forum);
         }
 
@@ -236,12 +233,35 @@ namespace ForumService.ForumService.Infrastructure.Repositories
             });
 
             var redisValues = await _redis.SortedSetRangeByRankAsync(
-                redisKey, 
-                start: 0, 
-                stop: -1, 
+                redisKey,
+                start: 0,
+                stop: -1,
                 order: Order.Descending);
-            
-            return _mapper.Map<List<Forum>>(redisValues);
+
+            return redisValues
+                .Select(v =>
+                {
+                    try
+                    {
+                        var json = (string?)v;
+                        return json != null ? JsonSerializer.Deserialize<ForumEf>(json) : null;
+                    }
+                    catch { return null; }
+                })
+                .Where(f => f != null)
+                .Select(f => _mapper.Map<Forum>(f!))
+                .ToList();
+        }
+
+        public async Task WriteVisitAsync(Guid userId, Guid forumId, CancellationToken cancellationToken = default)
+        {
+            var forum = await _context.Forums
+                .AsNoTracking()
+                .Where(f => f.Id == forumId)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (forum != null)
+                await _redis.WriteVisitForum(userId, forum);
         }
     }
 }

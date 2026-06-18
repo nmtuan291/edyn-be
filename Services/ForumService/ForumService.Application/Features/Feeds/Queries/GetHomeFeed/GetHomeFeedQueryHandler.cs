@@ -47,24 +47,48 @@ public sealed class GetHomeFeedQueryHandler : IRequestHandler<GetHomeFeedQuery, 
         }
 
         var candidateCount = request.PageSize * CandidateMultiplier;
-        var cutoff = DateTime.UtcNow - FeedCutoff;
+
+        // "Top" honours an explicit time window; other modes use the default feed cutoff.
+        var cutoff = request.Sort == SortBy.Top
+            ? GetDateCutoff(request.Date)
+            : DateTime.UtcNow - FeedCutoff;
 
         var candidates = await _threadRepository.GetHomeFeedCandidatesAsync(
             forumIds,
             candidateCount,
             cutoff,
+            request.Sort,
             cancellationToken);
 
-        Dictionary<string, double>? tagAffinity = null;
-        if (parsedUserId.HasValue)
-            tagAffinity = await _voteRepository.GetTagAffinityAsync(parsedUserId.Value);
+        List<ForumThread> ranked;
+        switch (request.Sort)
+        {
+            case SortBy.Latest:
+                // Candidates are already ordered by CreatedAt descending at the DB level.
+                ranked = candidates;
+                break;
 
-        var scored = candidates
-            .Select(t => new { Thread = t, Score = ComputeBoostedScore(t, tagAffinity) })
-            .OrderByDescending(x => x.Score)
-            .ToList();
+            case SortBy.Top:
+                ranked = candidates
+                    .OrderByDescending(t => t.Upvote)
+                    .ThenByDescending(t => t.CreatedAt)
+                    .ToList();
+                break;
 
-        var diversified = ApplyDiversityCap(scored.Select(x => x.Thread).ToList(), MaxPerForum);
+            default: // Hot
+                Dictionary<string, double>? tagAffinity = null;
+                if (parsedUserId.HasValue)
+                    tagAffinity = await _voteRepository.GetTagAffinityAsync(parsedUserId.Value);
+
+                ranked = candidates
+                    .Select(t => new { Thread = t, Score = ComputeBoostedScore(t, tagAffinity) })
+                    .OrderByDescending(x => x.Score)
+                    .Select(x => x.Thread)
+                    .ToList();
+                break;
+        }
+
+        var diversified = ApplyDiversityCap(ranked, MaxPerForum);
 
         var paged = diversified
             .Skip((request.Page - 1) * request.PageSize)
@@ -105,6 +129,14 @@ public sealed class GetHomeFeedQueryHandler : IRequestHandler<GetHomeFeedQuery, 
             return dto;
         }).ToList();
     }
+
+    private static DateTime GetDateCutoff(SortDate date) => date switch
+    {
+        SortDate.Day => DateTime.UtcNow.AddDays(-1),
+        SortDate.Month => DateTime.UtcNow.AddDays(-30),
+        SortDate.Year => DateTime.UtcNow.AddDays(-365),
+        _ => DateTime.MinValue.ToUniversalTime(),
+    };
 
     private static double ComputeBoostedScore(ForumThread thread, Dictionary<string, double>? tagAffinity)
     {
